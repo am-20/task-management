@@ -33,11 +33,13 @@ interface State extends DataSnapshot {
   setSidebarOpen: (open: boolean) => void
 
   importData: (data: DataSnapshot) => void
+  /** Replace the data with a copy from the cloud, keeping UI state such as open folders */
+  applyRemote: (data: DataSnapshot) => void
   resetToSample: () => void
   clearAll: () => void
 }
 
-function normalizeSnapshot(raw: unknown): DataSnapshot {
+export function normalizeSnapshot(raw: unknown): DataSnapshot {
   const data = (raw ?? {}) as Partial<DataSnapshot>
   const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : [])
   const str = (v: unknown, fallback = '') => (typeof v === 'string' ? v : fallback)
@@ -193,6 +195,7 @@ export const useStore = create<State>()(
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
 
       importData: (data) => set({ ...normalizeSnapshot(data), expanded: {} }),
+      applyRemote: (data) => set(normalizeSnapshot(data)),
       resetToSample: () => set({ ...createSeed(), expanded: {} }),
       clearAll: () => set({ areas: [], pages: [], tasks: [], habits: [], expanded: {} }),
     }),

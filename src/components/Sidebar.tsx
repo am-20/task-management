@@ -2,6 +2,7 @@ import {
   CalendarRange,
   ChevronRight,
   Download,
+  LogOut,
   PanelLeftClose,
   Plus,
   Repeat2,
@@ -12,11 +13,14 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react'
-import { useRef, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { todayKey } from '../lib/date'
 import { navigate, type Route } from '../lib/router'
 import { exportSnapshot, useStore } from '../store'
 import { confirmDialog } from '../lib/confirm'
+import { supabase } from '../lib/supabase'
+import { hasUnsyncedChanges, push, stopSync } from '../sync/engine'
+import { SyncStatus } from './SyncStatus'
 import { usePopover } from '../lib/usePopover'
 import { MenuDivider, MenuItem, Popover } from './ui'
 
@@ -36,6 +40,26 @@ export function Sidebar({ route, onSearch }: { route: Route; onSearch: () => voi
   const clearAll = useStore((s) => s.clearAll)
   const settings = usePopover()
   const fileRef = useRef<HTMLInputElement>(null)
+  const [email, setEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    void supabase?.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? null))
+  }, [])
+
+  const signOut = async () => {
+    if (!supabase) return
+    if (hasUnsyncedChanges()) await push()
+    if (hasUnsyncedChanges()) {
+      const ok = await confirmDialog({
+        title: 'Some changes have not synced yet',
+        body: 'You seem to be offline. Signing out now will lose the latest changes made on this device.',
+        action: 'Sign out anyway',
+      })
+      if (!ok) return
+    }
+    stopSync(true)
+    await supabase.auth.signOut({ scope: 'local' })
+  }
 
   const today = todayKey()
   const dueCount = tasks.filter((t) => !t.done && t.due && t.due <= today).length
@@ -207,6 +231,7 @@ export function Sidebar({ route, onSearch }: { route: Route; onSearch: () => voi
             <Settings2 size={16} />
           </span>
           <span className="nav-label">Your data</span>
+          <SyncStatus />
         </button>
         <input
           ref={fileRef}
@@ -223,7 +248,11 @@ export function Sidebar({ route, onSearch }: { route: Route; onSearch: () => voi
 
       {settings.anchor && (
         <Popover anchor={settings.anchor} onClose={settings.close} width={248}>
-          <p className="menu-note">Everything is saved in this browser. Export a backup now and then.</p>
+          <p className="menu-note">
+            {supabase
+              ? `Signed in${email ? ` as ${email}` : ''}. Changes sync to your account and work offline.`
+              : 'Everything is saved in this browser. Export a backup now and then.'}
+          </p>
           <MenuItem
             icon={<Download size={15} />}
             label="Export backup"
@@ -274,6 +303,19 @@ export function Sidebar({ route, onSearch }: { route: Route; onSearch: () => voi
               }
             }}
           />
+          {supabase && (
+            <>
+              <MenuDivider />
+              <MenuItem
+                icon={<LogOut size={15} />}
+                label="Sign out"
+                onSelect={() => {
+                  settings.close()
+                  void signOut()
+                }}
+              />
+            </>
+          )}
         </Popover>
       )}
     </aside>
