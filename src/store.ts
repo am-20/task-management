@@ -101,6 +101,9 @@ export function normalizeSnapshot(raw: unknown): DataSnapshot {
       icon: str(h.icon, '🍂'),
       areaId: h.areaId && areaIds.has(h.areaId) ? h.areaId : undefined,
       log: h.log && typeof h.log === 'object' ? { ...h.log } : {},
+      days: Array.isArray(h.days)
+        ? [...new Set(h.days.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))]
+        : undefined,
       createdAt: Number(h.createdAt) || Date.now(),
     }))
   return { areas, pages, tasks, habits }
@@ -302,15 +305,4 @@ export const useStore = create<State>()(
 export function exportSnapshot(): DataSnapshot {
   const { areas, pages, tasks, habits } = useStore.getState()
   return { areas, pages, tasks, habits }
-}
-
-/** Consecutive days done, counting back from today (or yesterday if today is still open). */
-export function habitStreak(habit: Habit, today: string, addDaysFn: (k: string, n: number) => string): number {
-  let cursor = habit.log[today] ? today : addDaysFn(today, -1)
-  let streak = 0
-  while (habit.log[cursor]) {
-    streak++
-    cursor = addDaysFn(cursor, -1)
-  }
-  return streak
 }

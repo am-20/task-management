@@ -1,6 +1,7 @@
 import { ChevronRight, FilePlus2, MoreHorizontal, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { TaskComposer, TaskList } from '../components/tasks'
+import { isScheduled } from '../lib/habits'
 import { byDue } from '../lib/sort'
 import { TopBar } from '../components/TopBar'
 import { EmojiButton, MenuDivider, MenuItem, MenuLabel, Popover } from '../components/ui'
@@ -188,8 +189,13 @@ export function AreaView({ id }: { id: string }) {
           <div className="habit-chips">
             {habits.map((h) => {
               const isDone = !!h.log[today]
+              const rest = !isScheduled(h, today)
               return (
-                <button key={h.id} type="button" className={`habit-chip${isDone ? ' done' : ''}`} aria-pressed={isDone} onClick={() => toggleHabit(h.id, today)}>
+                <button
+                  key={h.id}
+                  type="button"
+                  className={`habit-chip${isDone ? ' done' : ''}${rest && !isDone ? ' rest' : ''}`}
+                  title={rest ? 'Day off today' : undefined} aria-pressed={isDone} onClick={() => toggleHabit(h.id, today)}>
                   <span className="habit-chip-icon">{h.icon}</span>
                   <span className="habit-chip-name">{h.name}</span>
                 </button>

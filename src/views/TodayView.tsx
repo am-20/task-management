@@ -3,8 +3,9 @@ import type { CSSProperties } from 'react'
 import { TaskComposer, TaskList } from '../components/tasks'
 import { byDue } from '../lib/sort'
 import { TopBar } from '../components/TopBar'
-import { addDays, greeting, longDate, toKey, todayKey, weekday } from '../lib/date'
-import { habitStreak, useStore } from '../store'
+import { greeting, longDate, toKey, todayKey, weekday } from '../lib/date'
+import { habitStreak, isScheduled } from '../lib/habits'
+import { useStore } from '../store'
 
 export function TodayView() {
   const tasks = useStore((s) => s.tasks)
@@ -19,7 +20,8 @@ export function TodayView() {
   const doneToday = tasks
     .filter((t) => t.done && t.doneAt && toKey(new Date(t.doneAt)) === today)
     .sort((a, b) => (a.doneAt ?? 0) - (b.doneAt ?? 0))
-  const habitsDone = habits.filter((h) => h.log[today]).length
+  const todaysHabits = habits.filter((h) => isScheduled(h, today) || h.log[today])
+  const habitsDone = todaysHabits.filter((h) => h.log[today]).length
 
   let summary: string
   if (open.length === 0 && doneToday.length > 0) summary = 'Everything for today is done. The evening is yours.'
@@ -54,21 +56,21 @@ export function TodayView() {
           <TaskList tasks={[...open, ...doneToday]} />
         </section>
 
-        {habits.length > 0 && (
+        {todaysHabits.length > 0 && (
           <section className="section">
             <div className="section-head">
               <h2>Habits</h2>
               <span className="count">
-                {habitsDone}/{habits.length} today
+                {habitsDone}/{todaysHabits.length} today
               </span>
               <a className="section-link" href="#/habits">
                 This week <ArrowRight size={14} />
               </a>
             </div>
             <div className="habit-chips">
-              {habits.map((h) => {
+              {todaysHabits.map((h) => {
                 const done = !!h.log[today]
-                const streak = habitStreak(h, today, addDays)
+                const streak = habitStreak(h, today)
                 return (
                   <button
                     key={h.id}

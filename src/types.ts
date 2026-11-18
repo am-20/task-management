@@ -87,6 +87,8 @@ export interface Habit {
   areaId?: string
   /** Date keys (YYYY-MM-DD) on which the habit was done */
   log: Record<string, boolean>
+  /** Days of the week it's meant for, 0 = Sunday … 6 = Saturday. Missing = every day */
+  days?: number[]
   createdAt: number
 }
 

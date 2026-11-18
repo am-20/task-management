@@ -3,10 +3,14 @@ import { useMemo, useState, type CSSProperties } from 'react'
 import { TaskComposer, TaskList } from '../components/tasks'
 import { TopBar } from '../components/TopBar'
 import { addDays, fromKey, longDate, startOfWeek, toKey, todayKey, weekday } from '../lib/date'
+import { habitStart, isScheduled } from '../lib/habits'
 import { describeRepeat, upcomingDates } from '../lib/repeat'
 import { byDue } from '../lib/sort'
 import { useStore } from '../store'
-import type { Habit, Task } from '../types'
+import type { Task } from '../types'
+
+/** Drag data type for moving a task to another day */
+const DRAG_TYPE = 'application/x-hearth-task'
 
 const WEEKDAY_HEAD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -24,13 +28,6 @@ function shiftMonth(key: string, n: number): string {
 function gridDays(month: string): string[] {
   const first = startOfWeek(month)
   return Array.from({ length: 42 }, (_, i) => addDays(first, i))
-}
-
-/** The first day a habit existed: when it was made, or its earliest tick if older. */
-function habitStart(h: Habit): string {
-  const created = toKey(new Date(h.createdAt))
-  const earliest = Object.keys(h.log).sort()[0]
-  return earliest && earliest < created ? earliest : created
 }
 
 interface Ghost {
@@ -130,7 +127,10 @@ function dayClass(day: string, monthIndex: number, today: string, selected: stri
 function TasksMonth({ days, monthIndex, today, selected, onSelect }: MonthProps) {
   const tasks = useStore((s) => s.tasks)
   const areas = useStore((s) => s.areas)
+  const updateTask = useStore((s) => s.updateTask)
   const color = (areaId?: string) => areas.find((a) => a.id === areaId)?.color
+  const [dragOver, setDragOver] = useState<string | null>(null)
+  const [dragging, setDragging] = useState(false)
 
   const { byDay, ghostsByDay } = useMemo(() => {
     const start = days[0]
@@ -158,7 +158,7 @@ function TasksMonth({ days, monthIndex, today, selected, onSelect }: MonthProps)
     <>
       <div className="cal-grid-wrap">
         <WeekdayHeader />
-        <div className="cal-grid">
+        <div className={`cal-grid${dragging ? ' dragging' : ''}`}>
           {days.map((day) => {
             const items = byDay.get(day) ?? []
             const ghosts = ghostsByDay.get(day) ?? []
@@ -168,11 +168,35 @@ function TasksMonth({ days, monthIndex, today, selected, onSelect }: MonthProps)
             const more = total - shown.length - ghostShown.length
             const open = items.filter((t) => !t.done).length
             return (
-              <button
+              <div
                 key={day}
-                type="button"
-                className={dayClass(day, monthIndex, today, selected)}
+                role="button"
+                tabIndex={0}
+                className={dayClass(day, monthIndex, today, selected) + (dragOver === day ? ' drop' : '')}
                 onClick={() => onSelect(day)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onSelect(day)
+                  }
+                }}
+                onDragOver={(e) => {
+                  if (!e.dataTransfer.types.includes(DRAG_TYPE)) return
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'move'
+                  if (dragOver !== day) setDragOver(day)
+                }}
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver((d) => (d === day ? null : d))
+                }}
+                onDrop={(e) => {
+                  const id = e.dataTransfer.getData(DRAG_TYPE)
+                  setDragOver(null)
+                  if (!id) return
+                  e.preventDefault()
+                  updateTask(id, { due: day })
+                  onSelect(day)
+                }}
                 aria-label={`${weekday(day)} ${longDate(day)}: ${total ? `${total} ${total === 1 ? 'task' : 'tasks'}` : 'nothing planned'}`}
                 aria-pressed={day === selected}
               >
@@ -183,6 +207,17 @@ function TasksMonth({ days, monthIndex, today, selected, onSelect }: MonthProps)
                       key={t.id}
                       className={`cal-item${t.done ? ' done' : ''}${!t.done && day < today ? ' late' : ''}`}
                       style={{ '--dot': color(t.areaId) ?? 'var(--text-3)' } as CSSProperties}
+                      draggable={!t.done}
+                      title={t.done ? undefined : 'Drag to another day to move it'}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData(DRAG_TYPE, t.id)
+                        e.dataTransfer.effectAllowed = 'move'
+                        setDragging(true)
+                      }}
+                      onDragEnd={() => {
+                        setDragging(false)
+                        setDragOver(null)
+                      }}
                     >
                       {t.title || 'Untitled'}
                     </span>
@@ -204,7 +239,7 @@ function TasksMonth({ days, monthIndex, today, selected, onSelect }: MonthProps)
                   ))}
                 </span>
                 {open > 0 && day < today && <span className="sr-only">{open} not done</span>}
-              </button>
+              </div>
             )
           })}
         </div>
@@ -244,7 +279,9 @@ function HabitsMonth({ days, monthIndex, today, selected, onSelect }: MonthProps
   const focused = habits.find((h) => h.id === focus) ?? null
 
   const starts = useMemo(() => new Map(habits.map((h) => [h.id, habitStart(h)])), [habits])
-  const activeOn = (day: string) => (focused ? [focused] : habits).filter((h) => (starts.get(h.id) ?? today) <= day)
+  const existsOn = (day: string) => (focused ? [focused] : habits).filter((h) => (starts.get(h.id) ?? today) <= day)
+  // Habits due that day; a rest day doesn't count against you.
+  const activeOn = (day: string) => existsOn(day).filter((h) => isScheduled(h, day))
 
   // Month summary: days in this month up to today.
   const monthDays = days.filter((d) => fromKey(d).getMonth() === monthIndex && d <= today)
@@ -261,6 +298,7 @@ function HabitsMonth({ days, monthIndex, today, selected, onSelect }: MonthProps
   if (focused) {
     let run = 0
     for (const d of monthDays) {
+      if (!isScheduled(focused, d)) continue
       run = focused.log[d] ? run + 1 : 0
       best = Math.max(best, run)
     }
@@ -337,7 +375,10 @@ function HabitsMonth({ days, monthIndex, today, selected, onSelect }: MonthProps
               >
                 <span className="cal-num">{fromKey(day).getDate()}</span>
                 {focused ? (
-                  <span className={`habit-mark${focused.log[day] ? ' on' : ''}`} aria-hidden="true" />
+                  <span
+                    className={`habit-mark${focused.log[day] ? ' on' : ''}${isScheduled(focused, day) ? '' : ' rest'}`}
+                    aria-hidden="true"
+                  />
                 ) : (
                   !future &&
                   list.length > 0 && (
@@ -366,7 +407,9 @@ function HabitsMonth({ days, monthIndex, today, selected, onSelect }: MonthProps
             <p className="cal-empty">This day hasn’t happened yet.</p>
           ) : (
             <div className="habit-chips">
-              {activeOn(selected).map((h) => {
+              {existsOn(selected)
+                .filter((h) => isScheduled(h, selected) || h.log[selected])
+                .map((h) => {
                 const isDone = !!h.log[selected]
                 return (
                   <button
