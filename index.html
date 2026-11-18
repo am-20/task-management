@@ -2,11 +2,29 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#15100d" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
     <meta name="description" content="Hearth — a calm home for every area of your life." />
+    <meta name="theme-color" content="#15100d" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Installable web app -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Hearth" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
     <title>Hearth</title>
+    <style>
+      /* Paint the dark background before the app loads, so launching never flashes white. */
+      html,
+      body {
+        background: #15100d;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

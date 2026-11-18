@@ -1,6 +1,7 @@
-import { PanelLeft } from 'lucide-react'
+import { CloudOff, PanelLeft } from 'lucide-react'
 import { Fragment, type ReactNode } from 'react'
 import { useStore } from '../store'
+import { useSync } from '../sync/engine'
 
 export interface Crumb {
   label: string
@@ -11,6 +12,8 @@ export interface Crumb {
 export function TopBar({ crumbs, children }: { crumbs: Crumb[]; children?: ReactNode }) {
   const sidebarOpen = useStore((s) => s.sidebarOpen)
   const setSidebarOpen = useStore((s) => s.setSidebarOpen)
+  const sync = useSync()
+  const offline = sync.status === 'offline' || sync.status === 'error'
   return (
     <header className="topbar">
       <button
@@ -40,7 +43,15 @@ export function TopBar({ crumbs, children }: { crumbs: Crumb[]; children?: React
           </Fragment>
         ))}
       </nav>
-      <div className="topbar-actions">{children}</div>
+      <div className="topbar-actions">
+        {offline && (
+          <span className="topbar-offline" title={sync.message ?? 'Offline'} role="status">
+            <CloudOff size={15} />
+            <span>Offline</span>
+          </span>
+        )}
+        {children}
+      </div>
     </header>
   )
 }
