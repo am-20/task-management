@@ -51,15 +51,3 @@ create policy "Delete own workspace" on public.workspaces
 -- Visitors who are not signed in get nothing at all.
 revoke all on public.workspaces from anon;
 grant select, insert, update, delete on public.workspaces to authenticated;
-
--- Live updates between your devices.
-do $$
-begin
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'workspaces'
-  ) then
-    alter publication supabase_realtime add table public.workspaces;
-  end if;
-end;
-$$;

@@ -123,12 +123,27 @@ export function pull(): Promise<void> {
   return serial(async () => {
     if (!supabase || !userId) return
     if (!navigator.onLine) return fail(new Error('offline'))
-    const { data: row, error } = await supabase
+    // Ask for the version number first (a few bytes) and download the
+    // workspace itself only when another device has actually changed it.
+    const { data: head, error: headError } = await supabase
       .from(TABLE)
-      .select('data, version')
+      .select('version')
       .eq('user_id', userId)
       .maybeSingle()
-    if (error) return fail(error)
+    if (headError) return fail(headError)
+
+    let row: { data: unknown; version: number } | null = null
+    if (head && Number(head.version) !== version) {
+      const { data: full, error } = await supabase
+        .from(TABLE)
+        .select('data, version')
+        .eq('user_id', userId)
+        .maybeSingle()
+      if (error) return fail(error)
+      row = full
+    } else if (head) {
+      row = { data: null, version: Number(head.version) }
+    }
 
     if (!row) {
       // First sign-in anywhere: this device's data becomes the account's data.
@@ -205,6 +220,8 @@ export function push(): Promise<void> {
     base = snapshot
     dirty = changeSeq !== seqAtStart
     saveMeta()
+    // Nudge other open devices with just the new version number, not the data.
+    void channel?.send({ type: 'broadcast', event: 'saved', payload: { version } })
     if (dirty) schedulePush()
     else setStatus('synced')
   })
@@ -269,12 +286,13 @@ export async function startSync(id: string): Promise<void> {
     () => window.removeEventListener('pagehide', onLeave),
   )
 
-  // Live updates from other devices.
+  // Live updates from other devices. The message carries only a version number;
+  // a device that is in the background skips it and catches up when reopened.
   channel = supabase
     .channel(`workspace-${id}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE, filter: `user_id=eq.${id}` }, (payload) => {
-      const incoming = Number((payload.new as { version?: number } | null)?.version ?? 0)
-      if (incoming > version) void pull()
+    .on('broadcast', { event: 'saved' }, ({ payload }) => {
+      const incoming = Number((payload as { version?: number } | null)?.version ?? 0)
+      if (incoming > version && document.visibilityState === 'visible') void pull()
     })
     .subscribe()
 
