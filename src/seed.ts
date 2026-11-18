@@ -3,7 +3,7 @@ import { uid } from './lib/id'
 import type { Area, Block, BlockType, DataSnapshot, Habit, Page, Task } from './types'
 
 export const AREA_COLORS = [
-  { name: 'Burgundy', value: '#b0405a' },
+  { name: 'Deep red', value: '#b33a32' },
   { name: 'Rust', value: '#c2622d' },
   { name: 'Ochre', value: '#d4a04a' },
   { name: 'Olive', value: '#8f9654' },
@@ -37,7 +37,7 @@ export function createSeed(): DataSnapshot {
   const health = area('Health & Body', '🌿', '#8f9654', 'Sleep, movement, food and checkups.', 0)
   const money = area('Money', '🪙', '#d4a04a', 'Budget, bills and savings goals.', 1)
   const home = area('Home', '🏡', '#c2622d', 'Chores, repairs and making it cosy.', 2)
-  const people = area('People', '🍷', '#b0405a', 'Family, friends and the dates that matter.', 3)
+  const people = area('People', '🍷', '#b33a32', 'Family, friends and the dates that matter.', 3)
   const growth = area('Growth', '📚', '#8f5a7e', 'Reading, learning and reflection.', 4)
   const leisure = area('Leisure & Travel', '🧭', '#5d8791', 'Trips, hobbies and things to look forward to.', 5)
 
