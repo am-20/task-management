@@ -14,6 +14,22 @@ keeps working offline.
 
 - **Today** – what is due or overdue, today's habits, and a card per life area.
 - **Upcoming** – every open task grouped by when it is due, filterable by area.
+- **Repeating tasks** – daily, every N days, weekdays, chosen days of the week,
+  every N weeks, monthly on a date / the last day / e.g. the second Tuesday or
+  last Friday, yearly, or "N days/weeks/months after it's done"; can end on a
+  date or after a number of times. Finished occurrences stay in history; skip
+  one without marking it done.
+- **Calendar** – a month view with separate Tasks and Habits tabs. Tasks shows
+  what is due each day plus future repeats; Habits shows a monthly heatmap, or
+  one habit's days you can tick straight from the calendar.
+- **Repeating tasks** – daily, every N days, weekdays, chosen days of the week,
+  every N weeks, monthly on a date / the last day / e.g. the second Tuesday or
+  last Friday, yearly, or "N days/weeks/months after it's done"; can end on a
+  date or after a number of times. Finished occurrences stay in history; skip
+  one without marking it done.
+- **Calendar** – a month view with separate Tasks and Habits tabs. Tasks shows
+  what is due each day plus future repeats; Habits shows a monthly heatmap, or
+  one habit's days you can tick straight from the calendar.
 - **Habits** – a weekly check-in grid with streaks.
 - **Life areas** – create as many as you need; each has an icon, a colour,
   tasks, pages and habits.
@@ -43,6 +59,14 @@ npm run dev
 
 Without `.env.local` the app runs in local-only mode (no login, data stays in the
 browser).
+
+```bash
+npm test          # unit tests (repeat rules, store, sync merge)
+```
+
+```bash
+npm test          # unit tests (repeat rules, store, sync merge)
+```
 
 Build a static site into `dist/` (it can be hosted anywhere, including GitHub
 Pages):

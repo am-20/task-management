@@ -5,6 +5,7 @@ import { ConfirmHost } from './components/ui'
 import { useRoute } from './lib/router'
 import { useStore } from './store'
 import { AreaView } from './views/AreaView'
+import { CalendarView } from './views/CalendarView'
 import { HabitsView } from './views/HabitsView'
 import { PageView } from './views/PageView'
 import { TodayView } from './views/TodayView'
@@ -37,7 +38,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const routeKey = 'id' in route ? `${route.name}-${route.id}` : route.name
+  const routeKey = 'id' in route ? `${route.name}-${route.id}` : route.name === 'calendar' ? 'calendar' : route.name
 
   return (
     <div className={`app${sidebarOpen ? '' : ' sidebar-closed'}`}>
@@ -47,6 +48,7 @@ export default function App() {
         {route.name === 'today' && <TodayView />}
         {route.name === 'upcoming' && <UpcomingView />}
         {route.name === 'habits' && <HabitsView />}
+        {route.name === 'calendar' && <CalendarView tab={route.tab} />}
         {route.name === 'area' && <AreaView id={route.id} />}
         {route.name === 'page' && <PageView id={route.id} />}
       </main>

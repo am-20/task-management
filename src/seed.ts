@@ -1,6 +1,6 @@
 import { addDays, todayKey } from './lib/date'
 import { uid } from './lib/id'
-import type { Area, Block, BlockType, DataSnapshot, Habit, Page, Task } from './types'
+import type { Area, Block, BlockType, DataSnapshot, Habit, Page, Repeat, Task } from './types'
 
 export const AREA_COLORS = [
   { name: 'Deep red', value: '#b33a32' },
@@ -143,6 +143,16 @@ export function createSeed(): DataSnapshot {
     task('Sort the winter clothes', home.id, null, false, 12),
     task('Look into a pottery class', leisure.id, null, false, 13),
   ]
+
+  // A few repeating tasks, so the calendar has something to show.
+  const repeatTask = (title: string, repeat: Repeat) => {
+    const t = tasks.find((x) => x.title === title)
+    if (t) Object.assign(t, { repeat: { ...repeat, occurrence: 1 }, seriesId: t.id })
+  }
+  const todayDate = new Date()
+  repeatTask('Water the plants', { every: 3, unit: 'day' })
+  repeatTask('Pay electricity bill', { every: 1, unit: 'month', monthBy: 'day', monthDay: todayDate.getDate() })
+  repeatTask('Call grandma', { every: 1, unit: 'week', weekdays: [todayDate.getDay()] })
 
   const habit = (name: string, icon: string, areaId: string | undefined, pattern: number[], i: number): Habit => ({
     id: uid(),

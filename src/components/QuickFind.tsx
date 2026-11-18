@@ -1,4 +1,4 @@
-import { CalendarRange, Check, CornerDownLeft, Repeat2, Search, Sun } from 'lucide-react'
+import { CalendarDays, CalendarRange, Check, CornerDownLeft, Repeat2, Search, Sun } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { navigate } from '../lib/router'
@@ -31,6 +31,7 @@ export function QuickFind({ onClose }: { onClose: () => void }) {
     const views: Result[] = [
       { key: 'today', group: 'Go to', icon: <Sun size={16} />, title: 'Today', path: '/today' },
       { key: 'upcoming', group: 'Go to', icon: <CalendarRange size={16} />, title: 'Upcoming', path: '/upcoming' },
+      { key: 'calendar', group: 'Go to', icon: <CalendarDays size={16} />, title: 'Calendar', path: '/calendar' },
       { key: 'habits', group: 'Go to', icon: <Repeat2 size={16} />, title: 'Habits', path: '/habits' },
     ]
     out.push(...views.filter((v) => !q || has(v.title)))

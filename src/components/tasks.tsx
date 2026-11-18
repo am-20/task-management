@@ -2,8 +2,9 @@ import { CalendarDays, CircleSlash, Plus, X } from 'lucide-react'
 import { useState, type CSSProperties, type FormEvent } from 'react'
 import { addDays, nextMonday, nextSaturday, relativeLabel, todayKey, weekday } from '../lib/date'
 import { useStore } from '../store'
-import type { Area, Task } from '../types'
+import type { Area, Repeat, Task } from '../types'
 import { usePopover } from '../lib/usePopover'
+import { RepeatChip } from './repeat'
 import { Checkbox, MenuDivider, MenuItem, Popover } from './ui'
 
 /* ---------- Pickers ---------- */
@@ -127,6 +128,8 @@ export function TaskRow({ task, showArea = true }: { task: Task; showArea?: bool
   const updateTask = useStore((s) => s.updateTask)
   const toggleTask = useStore((s) => s.toggleTask)
   const deleteTask = useStore((s) => s.deleteTask)
+  const setRepeat = useStore((s) => s.setRepeat)
+  const skipOccurrence = useStore((s) => s.skipOccurrence)
 
   return (
     <div className={`task${task.done ? ' done' : ''}`}>
@@ -151,6 +154,14 @@ export function TaskRow({ task, showArea = true }: { task: Task; showArea?: bool
       />
       <div className="task-meta">
         {showArea && <AreaChip area={area} onChange={(areaId) => updateTask(task.id, { areaId })} />}
+        {!task.done && (
+          <RepeatChip
+            value={task.repeat}
+            base={task.due}
+            onChange={(rule) => setRepeat(task.id, rule)}
+            onSkip={() => skipOccurrence(task.id)}
+          />
+        )}
         <DueChip value={task.due} done={task.done} onChange={(due) => updateTask(task.id, { due })} />
         <button type="button" className="icon-btn subtle task-delete" aria-label="Delete task" title="Delete" onClick={() => deleteTask(task.id)}>
           <X size={15} />
@@ -185,13 +196,15 @@ export function TaskComposer({ defaultDue, defaultAreaId, placeholder = 'Add a t
   const [title, setTitle] = useState('')
   const [due, setDue] = useState(defaultDue)
   const [areaId, setAreaId] = useState(defaultAreaId)
+  const [repeat, setRepeat] = useState<Repeat | undefined>()
   const area = areas.find((a) => a.id === areaId)
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
-    addTask({ title, due, areaId: area?.id })
+    addTask({ title, due, areaId: area?.id, repeat })
     setTitle('')
+    setRepeat(undefined)
   }
 
   return (
@@ -200,6 +213,7 @@ export function TaskComposer({ defaultDue, defaultAreaId, placeholder = 'Add a t
       <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={placeholder} aria-label={placeholder} />
       <div className="task-meta">
         {showArea && <AreaChip area={area} onChange={setAreaId} />}
+        <RepeatChip value={repeat} base={due} onChange={setRepeat} />
         <DueChip value={due} onChange={setDue} />
       </div>
     </form>

@@ -1,9 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { todayKey } from './lib/date'
 import { uid } from './lib/id'
+import { cleanRepeat, firstOnOrAfter, nextDue } from './lib/repeat'
 import { sanitize } from './lib/sanitize'
 import { AREA_COLORS, createSeed } from './seed'
-import type { Area, Block, DataSnapshot, Habit, Page, Task } from './types'
+import type { Area, Block, DataSnapshot, Habit, Page, Repeat, Task } from './types'
 
 interface State extends DataSnapshot {
   /** Areas whose page list is open in the sidebar */
@@ -19,9 +21,13 @@ interface State extends DataSnapshot {
   setBlocks: (id: string, blocks: Block[]) => void
   deletePage: (id: string) => void
 
-  addTask: (task: { title: string; due?: string; areaId?: string }) => void
+  addTask: (task: { title: string; due?: string; areaId?: string; repeat?: Repeat }) => void
   updateTask: (id: string, patch: Partial<Task>) => void
   toggleTask: (id: string) => void
+  /** Set or clear how a task repeats */
+  setRepeat: (id: string, repeat?: Repeat) => void
+  /** Move a repeating task to its next date without marking it done */
+  skipOccurrence: (id: string) => void
   deleteTask: (id: string) => void
 
   addHabit: (habit: { name: string; icon?: string; areaId?: string }) => void
@@ -82,6 +88,9 @@ export function normalizeSnapshot(raw: unknown): DataSnapshot {
       doneAt: t.doneAt ? Number(t.doneAt) : undefined,
       due: /^\d{4}-\d{2}-\d{2}$/.test(str(t.due)) ? t.due : undefined,
       areaId: t.areaId && areaIds.has(t.areaId) ? t.areaId : undefined,
+      repeat: cleanRepeat(t.repeat),
+      seriesId: typeof t.seriesId === 'string' ? t.seriesId : undefined,
+      spawnedId: typeof t.spawnedId === 'string' ? t.spawnedId : undefined,
       createdAt: Number(t.createdAt) || Date.now(),
     }))
   const habits = arr<Habit>(data.habits)
@@ -152,20 +161,96 @@ export const useStore = create<State>()(
         })),
       deletePage: (id) => set((s) => ({ pages: s.pages.filter((p) => p.id !== id) })),
 
-      addTask: ({ title, due, areaId }) => {
+      addTask: ({ title, due, areaId, repeat }) => {
         const clean = title.trim()
         if (!clean) return
-        set((s) => ({
-          tasks: [...s.tasks, { id: uid(), title: clean, done: false, due, areaId, createdAt: Date.now() }],
-        }))
+        const id = uid()
+        const task: Task = repeat
+          ? {
+              id,
+              title: clean,
+              done: false,
+              due: firstOnOrAfter(repeat, due ?? todayKey()),
+              areaId,
+              createdAt: Date.now(),
+              repeat: { ...repeat, occurrence: 1 },
+              seriesId: id,
+            }
+          : { id, title: clean, done: false, due, areaId, createdAt: Date.now() }
+        set((s) => ({ tasks: [...s.tasks, task] }))
       },
       updateTask: (id, patch) =>
         set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
       toggleTask: (id) =>
+        set((s) => {
+          const task = s.tasks.find((t) => t.id === id)
+          if (!task) return {}
+          const now = Date.now()
+
+          if (task.done) {
+            // Un-ticking: also take back the next occurrence it created, if that one is still open.
+            const spawned = task.spawnedId ? s.tasks.find((t) => t.id === task.spawnedId) : undefined
+            const removeSpawned = !!spawned && !spawned.done
+            return {
+              tasks: s.tasks
+                .filter((t) => !(removeSpawned && t.id === spawned.id))
+                .map((t) =>
+                  t.id === id
+                    ? { ...t, done: false, doneAt: undefined, spawnedId: removeSpawned ? undefined : t.spawnedId }
+                    : t,
+                ),
+            }
+          }
+
+          // Finishing a repeating task keeps this one as history and creates the next.
+          if (task.repeat && !task.spawnedId) {
+            const next = nextDue(task.repeat, task.due ?? todayKey(), todayKey())
+            if (next) {
+              const nextTask: Task = {
+                id: uid(),
+                title: task.title,
+                done: false,
+                due: next,
+                areaId: task.areaId,
+                createdAt: now,
+                repeat: { ...task.repeat, occurrence: (task.repeat.occurrence ?? 1) + 1 },
+                seriesId: task.seriesId ?? task.id,
+              }
+              return {
+                tasks: [
+                  ...s.tasks.map((t) =>
+                    t.id === id
+                      ? { ...t, done: true, doneAt: now, seriesId: t.seriesId ?? t.id, spawnedId: nextTask.id }
+                      : t,
+                  ),
+                  nextTask,
+                ],
+              }
+            }
+          }
+          return { tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: true, doneAt: now } : t)) }
+        }),
+      setRepeat: (id, repeat) =>
         set((s) => ({
-          tasks: s.tasks.map((t) =>
-            t.id === id ? { ...t, done: !t.done, doneAt: t.done ? undefined : Date.now() } : t,
-          ),
+          tasks: s.tasks.map((t) => {
+            if (t.id !== id) return t
+            if (!repeat) return { ...t, repeat: undefined }
+            return {
+              ...t,
+              repeat: { ...repeat, occurrence: t.repeat?.occurrence ?? 1 },
+              due: firstOnOrAfter(repeat, t.due ?? todayKey()),
+              seriesId: t.seriesId ?? t.id,
+            }
+          }),
+        })),
+      skipOccurrence: (id) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) => {
+            if (t.id !== id || !t.repeat || !t.due) return t
+            const next = nextDue({ ...t.repeat, fromCompletion: false }, t.due, todayKey())
+            if (!next) return t
+            return { ...t, due: next, repeat: { ...t.repeat, occurrence: (t.repeat.occurrence ?? 1) + 1 } }
+          }),
         })),
       deleteTask: (id) => set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
 

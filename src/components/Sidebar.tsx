@@ -1,4 +1,5 @@
 import {
+  CalendarDays,
   CalendarRange,
   ChevronRight,
   Download,
@@ -140,6 +141,7 @@ export function Sidebar({ route, onSearch }: { route: Route; onSearch: () => voi
       <nav className="nav">
         {navLink('today', '/today', 'Today', <Sun size={16} />, dueCount)}
         {navLink('upcoming', '/upcoming', 'Upcoming', <CalendarRange size={16} />)}
+        {navLink('calendar', '/calendar', 'Calendar', <CalendarDays size={16} />)}
         {navLink('habits', '/habits', 'Habits', <Repeat2 size={16} />)}
       </nav>
 
