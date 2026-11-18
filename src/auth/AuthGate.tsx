@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { Logo } from '../components/Logo'
 import { supabase } from '../lib/supabase'
 import { startSync, stopSync } from '../sync/engine'
 
@@ -49,13 +50,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
 function Brand() {
   return (
     <div className="auth-brand">
-      <svg viewBox="0 0 32 32" width="44" height="44" aria-hidden="true">
-        <rect width="32" height="32" rx="8" fill="var(--accent)" />
-        <path
-          d="M16 6 C17.5 9.5 22 11.5 22 17 A6 6 0 0 1 10 17 C10 14.8 10.9 13.2 12.1 12 C12.4 13.6 13.2 14.6 14.2 15.1 C13.7 11.7 14.4 8.7 16 6 Z"
-          fill="#f6e7d6"
-        />
-      </svg>
+      <Logo size={56} />
       <span>Hearth</span>
     </div>
   )

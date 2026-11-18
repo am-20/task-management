@@ -17,11 +17,11 @@
   --text-2: #bcab9b;
   --text-3: #8f7f72;
 
-  --accent: #a3324a;
-  --accent-hover: #b93d57;
-  --accent-soft: rgba(163, 50, 74, 0.17);
-  --accent-line: rgba(196, 84, 108, 0.5);
-  --accent-text: #e3899b;
+  --accent: #8b0000;
+  --accent-hover: #a31212;
+  --accent-soft: rgba(160, 20, 20, 0.24);
+  --accent-line: rgba(206, 70, 62, 0.5);
+  --accent-text: #e57f74;
 
   --rust: #c2622d;
   --ochre: #d4a04a;
@@ -91,7 +91,7 @@ p {
 }
 
 ::selection {
-  background: rgba(176, 64, 90, 0.45);
+  background: rgba(170, 30, 30, 0.5);
 }
 
 :focus-visible {
@@ -138,7 +138,7 @@ kbd {
   height: 100dvh;
   overflow-y: auto;
   background:
-    radial-gradient(900px 420px at 85% -120px, rgba(163, 50, 74, 0.13), transparent 70%),
+    radial-gradient(900px 420px at 85% -120px, rgba(139, 0, 0, 0.13), transparent 70%),
     radial-gradient(700px 380px at -10% 110%, rgba(194, 98, 45, 0.06), transparent 70%),
     var(--bg);
 }
@@ -1558,7 +1558,7 @@ a.crumb:hover {
 .block-callout {
   margin: 8px 0;
   padding: 9px 14px 9px 8px;
-  border: 1px solid rgba(196, 84, 108, 0.28);
+  border: 1px solid rgba(206, 70, 62, 0.28);
   border-radius: 11px;
   background: var(--accent-soft);
 }
@@ -2084,7 +2084,7 @@ a.crumb:hover {
   padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
   overflow-y: auto;
   background:
-    radial-gradient(700px 420px at 50% -10%, rgba(163, 50, 74, 0.22), transparent 70%),
+    radial-gradient(700px 420px at 50% -10%, rgba(139, 0, 0, 0.22), transparent 70%),
     radial-gradient(600px 360px at 10% 110%, rgba(194, 98, 45, 0.08), transparent 70%),
     var(--bg);
 }

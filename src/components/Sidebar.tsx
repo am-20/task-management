@@ -20,6 +20,7 @@ import { exportSnapshot, useStore } from '../store'
 import { confirmDialog } from '../lib/confirm'
 import { supabase } from '../lib/supabase'
 import { hasUnsyncedChanges, push, stopSync } from '../sync/engine'
+import { Logo } from './Logo'
 import { SyncStatus } from './SyncStatus'
 import { usePopover } from '../lib/usePopover'
 import { MenuDivider, MenuItem, Popover } from './ui'
@@ -121,10 +122,7 @@ export function Sidebar({ route, onSearch }: { route: Route; onSearch: () => voi
       <div className="sidebar-head">
         <a className="brand" href="#/today" onClick={() => isNarrow() && setSidebarOpen(false)}>
           <span className="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 32 32" width="22" height="22">
-              <rect width="32" height="32" rx="8" fill="var(--accent)" />
-              <path d="M16 6 C17.5 9.5 22 11.5 22 17 A6 6 0 0 1 10 17 C10 14.8 10.9 13.2 12.1 12 C12.4 13.6 13.2 14.6 14.2 15.1 C13.7 11.7 14.4 8.7 16 6 Z" fill="#f6e7d6" />
-            </svg>
+            <Logo size={22} />
           </span>
           Hearth
         </a>

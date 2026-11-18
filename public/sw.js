@@ -4,7 +4,7 @@
  * - Built assets (hashed file names) and fonts: cache first, they never change.
  * - Anything on another origin (the Supabase API) is left alone.
  */
-const CACHE = 'hearth-v3'
+const CACHE = 'hearth-v4'
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './icons/icon-192.png']
 
 self.addEventListener('install', (event) => {

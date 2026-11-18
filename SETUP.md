@@ -195,10 +195,28 @@ entirely, upgrade the project to the Pro plan.
 **Backups.** Use **Your data → Export backup** now and then and keep the file
 somewhere safe. **Import backup** restores it.
 
-**Forgot your password?** Use **Forgot password?** on the sign-in screen; the
-email comes from Supabase. The built-in email sender only allows a few emails per
-hour, which is fine for a personal app. You can also send a reset from Supabase →
-**Authentication → Users → … → Send password recovery**.
+**Forgot your password?** Use **Forgot password?** on the sign-in screen. For
+the email to arrive, check these once:
+
+1. **Your login email must be allowed to receive Supabase's built-in emails.**
+   Supabase's default sender only delivers to people on the project's team. If
+   your Hearth login email is the same one you use to sign in to Supabase, you're
+   set. If not, either add it under Supabase → **Organization settings → Team →
+   Invite**, or set up your own sender (point 3).
+2. **Make the email look like Hearth** (optional): Supabase → **Authentication →
+   Emails → Templates → Reset Password**. Subject: `Reset your Hearth password`.
+   Paste the contents of [`supabase/email-reset-password.html`](supabase/email-reset-password.html)
+   into the message body and save.
+3. **Your own sender** (optional, only if point 1 doesn't suit you): create a free
+   [Resend](https://resend.com) account, add `hearth-app.dev` as a domain (it can
+   add the DNS records to Cloudflare for you), then in Supabase → **Authentication
+   → Emails → SMTP Settings** turn on custom SMTP with Resend's details. Sender
+   address: `hearth@hearth-app.dev`.
+
+The built-in sender allows only a few emails per hour, which is plenty for one
+person. The reset link opens in your browser rather than the home-screen app;
+set the new password there, then sign in with it in the app. You can also trigger
+a reset from Supabase → **Authentication → Users → … → Send password recovery**.
 
 **Search engines and bots.** The site tells search engines not to index it
 (`robots.txt` plus a `noindex` header), and without signing in there is nothing to
