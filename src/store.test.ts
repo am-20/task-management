@@ -80,3 +80,18 @@ describe('repeating tasks', () => {
     expect(byTitle('Rent')[0].repeat).toMatchObject({ every: 1, unit: 'month', monthBy: 'day', monthDay: 1, occurrence: 1 })
   })
 })
+
+describe('forward compatibility', () => {
+  it('keeps fields a future version adds', () => {
+    useStore.getState().importData({
+      areas: [{ id: 'a1', name: 'Home', icon: '🏡', color: '#c2622d', description: '', createdAt: 1, futureField: 'x' } as never],
+      pages: [],
+      tasks: [{ id: 't1', title: 'Bins', done: false, createdAt: 1, priority: 'high' } as never],
+      habits: [{ id: 'h1', name: 'Walk', icon: '🥾', log: {}, createdAt: 1, reminder: '08:00' } as never],
+    })
+    const s = useStore.getState() as unknown as Record<string, Record<string, unknown>[]>
+    expect(s.areas[0].futureField).toBe('x')
+    expect(s.tasks[0].priority).toBe('high')
+    expect(s.habits[0].reminder).toBe('08:00')
+  })
+})

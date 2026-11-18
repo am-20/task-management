@@ -49,9 +49,13 @@ export function normalizeSnapshot(raw: unknown): DataSnapshot {
   const data = (raw ?? {}) as Partial<DataSnapshot>
   const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : [])
   const str = (v: unknown, fallback = '') => (typeof v === 'string' ? v : fallback)
+  // Keep fields this version doesn't know about, so an older copy of the app
+  // open on another device never erases data saved by a newer one.
+  const keep = (o: object): Record<string, unknown> => ({ ...o })
   const areas = arr<Area>(data.areas)
     .filter((a) => a && typeof a.id === 'string')
     .map((a) => ({
+      ...keep(a),
       id: a.id,
       name: str(a.name, 'Untitled'),
       icon: str(a.icon, '🍂'),
@@ -63,6 +67,7 @@ export function normalizeSnapshot(raw: unknown): DataSnapshot {
   const pages = arr<Page>(data.pages)
     .filter((p) => p && typeof p.id === 'string' && areaIds.has(p.areaId))
     .map((p) => ({
+      ...keep(p),
       id: p.id,
       areaId: p.areaId,
       title: str(p.title),
@@ -70,6 +75,7 @@ export function normalizeSnapshot(raw: unknown): DataSnapshot {
       blocks: arr<Block>(p.blocks)
         .filter((bl) => bl && typeof bl.id === 'string')
         .map((bl) => ({
+          ...keep(bl),
           id: bl.id,
           type: bl.type,
           html: sanitize(str(bl.html)),
@@ -82,6 +88,7 @@ export function normalizeSnapshot(raw: unknown): DataSnapshot {
   const tasks = arr<Task>(data.tasks)
     .filter((t) => t && typeof t.id === 'string')
     .map((t) => ({
+      ...keep(t),
       id: t.id,
       title: str(t.title),
       done: !!t.done,
@@ -96,6 +103,7 @@ export function normalizeSnapshot(raw: unknown): DataSnapshot {
   const habits = arr<Habit>(data.habits)
     .filter((h) => h && typeof h.id === 'string')
     .map((h) => ({
+      ...keep(h),
       id: h.id,
       name: str(h.name, 'Habit'),
       icon: str(h.icon, '🍂'),
