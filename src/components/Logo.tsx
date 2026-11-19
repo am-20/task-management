@@ -1,13 +1,16 @@
 import { useId } from 'react'
 
-const PETAL = 'M50 50 C40 42 38 26 50 13 C62 26 60 42 50 50 Z'
-const LEAF = 'M50 50 C46 44 46 37 50 31 C54 37 54 44 50 50 Z'
+const MOON = 'M61 13 C38 15 24 36 29.5 57 C34 74 52 84 70 80 C53 75 41.5 62 41.5 46.5 C41.5 31 49.5 19 61 13Z'
+const THORNS = ['M33.8 31.5 L24.5 25 L30.6 36Z', 'M29.6 47 L19.5 45.5 L29 51.6Z', 'M33 64.5 L24 70.5 L35.4 68.4Z']
+const STAR =
+  'M66 24 C67.1 40.25 68.64 47.9 78 49 C68.64 50.1 67.1 59.15 66 78 C64.9 59.15 63.36 50.1 54 49 C63.36 47.9 64.9 40.25 66 24Z'
+const SPARK =
+  'M77 15.5 C77.5 19.075 77.968 20.5 81.4 21 C77.968 21.5 77.5 22.925 77 26.5 C76.5 22.925 76.032 21.5 72.6 21 C76.032 20.5 76.5 19.075 77 15.5Z'
 
-/** The Hearth mark: a white ring and blossom on deep red. `detail` adds the small leaves for large sizes. */
+/** The Hearth mark: a thorned crescent and a needle star, white on deep red. */
 export function Logo({ size = 22, detail = size >= 40 }: { size?: number; detail?: boolean }) {
   const id = useId()
-  const stroke = size >= 120 ? 3.4 : size >= 40 ? 4.4 : 7
-  const scale = size >= 40 ? 0.8 : 0.9
+  const scale = size >= 40 ? 0.82 : 0.92
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
       <defs>
@@ -17,21 +20,13 @@ export function Logo({ size = 22, detail = size >= 40 }: { size?: number; detail
         </radialGradient>
       </defs>
       <rect width="100" height="100" rx="24" fill={`url(#${id})`} />
-      <g
-        transform={`translate(50 50) scale(${scale}) translate(-50 -50)`}
-        fill="none"
-        stroke="#fff"
-        strokeWidth={stroke}
-        strokeLinejoin="round"
-      >
-        <circle cx="50" cy="50" r="40" />
-        {[0, 90, 180, 270].map((r) => (
-          <path key={r} d={PETAL} transform={`rotate(${r} 50 50)`} />
+      <g transform={`translate(50 50) scale(${scale}) translate(-50 -50)`} fill="#fff">
+        <path d={MOON} />
+        {THORNS.map((d) => (
+          <path key={d} d={d} />
         ))}
-        {detail &&
-          [45, 135, 225, 315].map((r) => (
-            <path key={r} d={LEAF} transform={`rotate(${r} 50 50) translate(0 -10)`} />
-          ))}
+        <path d={STAR} />
+        {detail && <path d={SPARK} />}
       </g>
     </svg>
   )

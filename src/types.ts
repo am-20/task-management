@@ -71,6 +71,10 @@ export interface Task {
   doneAt?: number
   /** Local date key, YYYY-MM-DD */
   due?: string
+  /** Start time on the due date, HH:mm (24-hour). Missing = any time that day */
+  time?: string
+  /** Length in minutes, for time blocking */
+  duration?: number
   areaId?: string
   createdAt: number
   repeat?: Repeat

@@ -48,7 +48,7 @@ export default function App() {
         {route.name === 'today' && <TodayView />}
         {route.name === 'upcoming' && <UpcomingView />}
         {route.name === 'habits' && <HabitsView />}
-        {route.name === 'calendar' && <CalendarView tab={route.tab} />}
+        {route.name === 'calendar' && <CalendarView mode={route.mode} />}
         {route.name === 'area' && <AreaView id={route.id} />}
         {route.name === 'page' && <PageView id={route.id} />}
       </main>

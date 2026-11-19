@@ -21,7 +21,7 @@ interface State extends DataSnapshot {
   setBlocks: (id: string, blocks: Block[]) => void
   deletePage: (id: string) => void
 
-  addTask: (task: { title: string; due?: string; areaId?: string; repeat?: Repeat }) => void
+  addTask: (task: { title: string; due?: string; time?: string; duration?: number; areaId?: string; repeat?: Repeat }) => void
   updateTask: (id: string, patch: Partial<Task>) => void
   toggleTask: (id: string) => void
   /** Set or clear how a task repeats */
@@ -94,6 +94,8 @@ export function normalizeSnapshot(raw: unknown): DataSnapshot {
       done: !!t.done,
       doneAt: t.doneAt ? Number(t.doneAt) : undefined,
       due: /^\d{4}-\d{2}-\d{2}$/.test(str(t.due)) ? t.due : undefined,
+      time: /^([01]\d|2[0-3]):[0-5]\d$/.test(str(t.time)) ? t.time : undefined,
+      duration: Number.isInteger(t.duration) && t.duration! >= 5 && t.duration! <= 1440 ? t.duration : undefined,
       areaId: t.areaId && areaIds.has(t.areaId) ? t.areaId : undefined,
       repeat: cleanRepeat(t.repeat),
       seriesId: typeof t.seriesId === 'string' ? t.seriesId : undefined,
@@ -172,7 +174,7 @@ export const useStore = create<State>()(
         })),
       deletePage: (id) => set((s) => ({ pages: s.pages.filter((p) => p.id !== id) })),
 
-      addTask: ({ title, due, areaId, repeat }) => {
+      addTask: ({ title, due, time, duration, areaId, repeat }) => {
         const clean = title.trim()
         if (!clean) return
         const id = uid()
@@ -182,12 +184,14 @@ export const useStore = create<State>()(
               title: clean,
               done: false,
               due: firstOnOrAfter(repeat, due ?? todayKey()),
+              time,
+              duration,
               areaId,
               createdAt: Date.now(),
               repeat: { ...repeat, occurrence: 1 },
               seriesId: id,
             }
-          : { id, title: clean, done: false, due, areaId, createdAt: Date.now() }
+          : { id, title: clean, done: false, due, time: due ? time : undefined, duration: due ? duration : undefined, areaId, createdAt: Date.now() }
         set((s) => ({ tasks: [...s.tasks, task] }))
       },
       updateTask: (id, patch) =>
@@ -222,6 +226,8 @@ export const useStore = create<State>()(
                 title: task.title,
                 done: false,
                 due: next,
+                time: task.time,
+                duration: task.duration,
                 areaId: task.areaId,
                 createdAt: now,
                 repeat: { ...task.repeat, occurrence: (task.repeat.occurrence ?? 1) + 1 },

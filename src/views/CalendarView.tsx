@@ -2,8 +2,9 @@ import { ChevronLeft, ChevronRight, Repeat as RepeatIcon } from 'lucide-react'
 import { useMemo, useState, type CSSProperties } from 'react'
 import { TaskComposer, TaskList } from '../components/tasks'
 import { TopBar } from '../components/TopBar'
+import { useIsPhone } from '../lib/useMedia'
+import { WeekView } from './WeekView'
 import { addDays, fromKey, longDate, startOfWeek, toKey, todayKey, weekday } from '../lib/date'
-import { habitStart, isScheduled } from '../lib/habits'
 import { describeRepeat, upcomingDates } from '../lib/repeat'
 import { byDue } from '../lib/sort'
 import { useStore } from '../store'
@@ -35,61 +36,97 @@ interface Ghost {
   date: string
 }
 
-export function CalendarView({ tab }: { tab: 'tasks' | 'habits' }) {
+export function CalendarView({ mode }: { mode: 'month' | 'week' }) {
   const today = todayKey()
+  const phone = useIsPhone()
   const [month, setMonth] = useState(() => monthStart(today))
+  const [week, setWeek] = useState(() => startOfWeek(today))
   const [selected, setSelected] = useState(today)
   const days = useMemo(() => gridDays(month), [month])
   const monthIndex = fromKey(month).getMonth()
-  const title = fromKey(month).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+
+  const weekEnd = addDays(week, 6)
+  const title =
+    mode === 'month'
+      ? fromKey(month).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+      : weekTitle(week, weekEnd)
 
   const go = (n: number) => {
-    const next = shiftMonth(month, n)
-    setMonth(next)
-    setSelected(next.slice(0, 7) === today.slice(0, 7) ? today : next)
+    if (mode === 'month') {
+      const next = shiftMonth(month, n)
+      setMonth(next)
+      setSelected(next.slice(0, 7) === today.slice(0, 7) ? today : next)
+    } else {
+      const next = addDays(week, n * 7)
+      setWeek(next)
+      setSelected(next === startOfWeek(today) ? today : next)
+    }
   }
   const goToday = () => {
     setMonth(monthStart(today))
+    setWeek(startOfWeek(today))
     setSelected(today)
   }
+  const unit = mode === 'month' ? 'month' : 'week'
 
   return (
     <>
       <TopBar crumbs={[{ label: 'Calendar' }]} />
-      <div className="view calendar-view">
+      <div className={`view calendar-view${mode === 'week' && !phone ? ' wide' : ''}`}>
         <header className="cal-header">
           <div className="cal-title">
             <h1>{title}</h1>
             <div className="cal-nav">
-              <button type="button" className="icon-btn" aria-label="Previous month" onClick={() => go(-1)}>
+              <button type="button" className="icon-btn" aria-label={`Previous ${unit}`} onClick={() => go(-1)}>
                 <ChevronLeft size={18} />
               </button>
               <button type="button" className="btn ghost small cal-today" onClick={goToday}>
                 Today
               </button>
-              <button type="button" className="icon-btn" aria-label="Next month" onClick={() => go(1)}>
+              <button type="button" className="icon-btn" aria-label={`Next ${unit}`} onClick={() => go(1)}>
                 <ChevronRight size={18} />
               </button>
             </div>
           </div>
-          <div className="segmented cal-tabs" role="tablist" aria-label="Show">
-            <a role="tab" aria-selected={tab === 'tasks'} className={tab === 'tasks' ? 'on' : ''} href="#/calendar">
-              Tasks
+          <div className="segmented cal-tabs" role="tablist" aria-label="Layout">
+            <a
+              role="tab"
+              aria-selected={mode === 'month'}
+              className={mode === 'month' ? 'on' : ''}
+              href="#/calendar"
+              onClick={() => setMonth(monthStart(selected))}
+            >
+              Month
             </a>
-            <a role="tab" aria-selected={tab === 'habits'} className={tab === 'habits' ? 'on' : ''} href="#/calendar/habits">
-              Habits
+            <a
+              role="tab"
+              aria-selected={mode === 'week'}
+              className={mode === 'week' ? 'on' : ''}
+              href="#/calendar/week"
+              onClick={() => setWeek(startOfWeek(selected))}
+            >
+              Week
             </a>
           </div>
         </header>
 
-        {tab === 'tasks' ? (
+        {mode === 'month' ? (
           <TasksMonth days={days} monthIndex={monthIndex} today={today} selected={selected} onSelect={setSelected} />
         ) : (
-          <HabitsMonth days={days} monthIndex={monthIndex} today={today} selected={selected} onSelect={setSelected} />
+          <WeekView week={week} today={today} />
         )}
       </div>
     </>
   )
+}
+
+function weekTitle(start: string, end: string): string {
+  const a = fromKey(start)
+  const b = fromKey(end)
+  const sameMonth = a.getMonth() === b.getMonth()
+  const left = a.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  const right = b.toLocaleDateString(undefined, sameMonth ? { day: 'numeric' } : { month: 'short', day: 'numeric' })
+  return `${left} – ${right}, ${b.getFullYear()}`
 }
 
 interface MonthProps {
@@ -266,168 +303,6 @@ function TasksMonth({ days, monthIndex, today, selected, onSelect }: MonthProps)
         )}
         {dayTasks.length === 0 && dayGhosts.length === 0 && <p className="cal-empty">Nothing planned for this day.</p>}
       </section>
-    </>
-  )
-}
-
-/* ---------- Habits ---------- */
-
-function HabitsMonth({ days, monthIndex, today, selected, onSelect }: MonthProps) {
-  const habits = useStore((s) => s.habits)
-  const toggleHabit = useStore((s) => s.toggleHabit)
-  const [focus, setFocus] = useState<string | null>(null)
-  const focused = habits.find((h) => h.id === focus) ?? null
-
-  const starts = useMemo(() => new Map(habits.map((h) => [h.id, habitStart(h)])), [habits])
-  const existsOn = (day: string) => (focused ? [focused] : habits).filter((h) => (starts.get(h.id) ?? today) <= day)
-  // Habits due that day; a rest day doesn't count against you.
-  const activeOn = (day: string) => existsOn(day).filter((h) => isScheduled(h, day))
-
-  // Month summary: days in this month up to today.
-  const monthDays = days.filter((d) => fromKey(d).getMonth() === monthIndex && d <= today)
-  let possible = 0
-  let done = 0
-  for (const d of monthDays) {
-    const list = activeOn(d)
-    possible += list.length
-    done += list.filter((h) => h.log[d]).length
-  }
-  const pct = possible ? Math.round((done / possible) * 100) : 0
-
-  let best = 0
-  if (focused) {
-    let run = 0
-    for (const d of monthDays) {
-      if (!isScheduled(focused, d)) continue
-      run = focused.log[d] ? run + 1 : 0
-      best = Math.max(best, run)
-    }
-  }
-
-  if (habits.length === 0) {
-    return (
-      <div className="empty">
-        <p>No habits yet. Add one on the Habits page and its days will show up here.</p>
-        <a className="btn primary" href="#/habits">
-          Go to Habits
-        </a>
-      </div>
-    )
-  }
-
-  return (
-    <>
-      <div className="filters cal-habit-filter" role="tablist" aria-label="Habit">
-        <button type="button" role="tab" aria-selected={!focused} className={`filter${focused ? '' : ' active'}`} onClick={() => setFocus(null)}>
-          All habits
-        </button>
-        {habits.map((h) => (
-          <button
-            key={h.id}
-            type="button"
-            role="tab"
-            aria-selected={focus === h.id}
-            className={`filter${focus === h.id ? ' active' : ''}`}
-            onClick={() => setFocus(h.id)}
-          >
-            <span>{h.icon}</span>
-            {h.name}
-          </button>
-        ))}
-      </div>
-
-      <div className="cal-stats">
-        <span>
-          <b>{done}</b> check-ins
-        </span>
-        <span>
-          <b>{pct}%</b> of possible days
-        </span>
-        {focused && (
-          <span>
-            <b>{best}</b> {best === 1 ? 'day' : 'days'} best run this month
-          </span>
-        )}
-      </div>
-
-      <div className="cal-grid-wrap">
-        <WeekdayHeader />
-        <div className={`cal-grid habits${focused ? ' single' : ''}`}>
-          {days.map((day) => {
-            const list = activeOn(day)
-            const count = list.filter((h) => h.log[day]).length
-            const ratio = list.length ? count / list.length : 0
-            const future = day > today
-            const label = focused
-              ? `${focused.name}, ${weekday(day)} ${longDate(day)}${focused.log[day] ? ', done' : ''}`
-              : `${weekday(day)} ${longDate(day)}: ${count} of ${list.length} habits`
-            return (
-              <button
-                key={day}
-                type="button"
-                className={dayClass(day, monthIndex, today, selected) + (future ? ' future' : '')}
-                onClick={() => {
-                  onSelect(day)
-                  if (focused && !future) toggleHabit(focused.id, day)
-                }}
-                aria-label={label}
-                aria-pressed={focused ? !!focused.log[day] : day === selected}
-              >
-                <span className="cal-num">{fromKey(day).getDate()}</span>
-                {focused ? (
-                  <span
-                    className={`habit-mark${focused.log[day] ? ' on' : ''}${isScheduled(focused, day) ? '' : ' rest'}`}
-                    aria-hidden="true"
-                  />
-                ) : (
-                  !future &&
-                  list.length > 0 && (
-                    <>
-                      <span className="heat" style={{ '--heat': ratio } as CSSProperties} aria-hidden="true" />
-                      <span className="heat-count">
-                        {count}/{list.length}
-                      </span>
-                    </>
-                  )
-                )}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-      {focused && <p className="cal-hint">Tap a day to tick or untick it.</p>}
-
-      {!focused && (
-        <section className="section cal-agenda">
-          <div className="section-head">
-            <h2>{selected === today ? 'Today' : weekday(selected)}</h2>
-            <span className="count">{longDate(selected)}</span>
-          </div>
-          {selected > today ? (
-            <p className="cal-empty">This day hasn’t happened yet.</p>
-          ) : (
-            <div className="habit-chips">
-              {existsOn(selected)
-                .filter((h) => isScheduled(h, selected) || h.log[selected])
-                .map((h) => {
-                const isDone = !!h.log[selected]
-                return (
-                  <button
-                    key={h.id}
-                    type="button"
-                    className={`habit-chip${isDone ? ' done' : ''}`}
-                    aria-pressed={isDone}
-                    onClick={() => toggleHabit(h.id, selected)}
-                  >
-                    <span className="habit-chip-icon">{h.icon}</span>
-                    <span className="habit-chip-name">{h.name}</span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </section>
-      )}
     </>
   )
 }

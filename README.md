@@ -19,18 +19,27 @@ keeps working offline.
   last Friday, yearly, or "N days/weeks/months after it's done"; can end on a
   date or after a number of times. Finished occurrences stay in history; skip
   one without marking it done.
-- **Calendar** – a month view with separate Tasks and Habits tabs. Tasks shows
-  what is due each day plus future repeats; Habits shows a monthly heatmap, or
-  one habit's days you can tick straight from the calendar.
+- **Calendar** – Month and Week layouts. Month shows what is due each day plus
+  future repeats; drag a task to another day to move it. Week is a time grid for
+  time blocking: an "Any time" row lists every task without a time, and timed
+  tasks sit in the hours they take. Drag tasks into the grid, between days or to
+  another time, stretch them to change their length, click one to edit it, or
+  click an empty slot to add a task there. On a phone, Week is a list per day.
+- **Times** – any task can have a start time and length (from its date button).
 - **Repeating tasks** – daily, every N days, weekdays, chosen days of the week,
   every N weeks, monthly on a date / the last day / e.g. the second Tuesday or
   last Friday, yearly, or "N days/weeks/months after it's done"; can end on a
   date or after a number of times. Finished occurrences stay in history; skip
   one without marking it done.
-- **Calendar** – a month view with separate Tasks and Habits tabs. Tasks shows
-  what is due each day plus future repeats; Habits shows a monthly heatmap, or
-  one habit's days you can tick straight from the calendar.
-- **Habits** – a weekly check-in grid with streaks.
+- **Calendar** – Month and Week layouts. Month shows what is due each day plus
+  future repeats; drag a task to another day to move it. Week is a time grid for
+  time blocking: an "Any time" row lists every task without a time, and timed
+  tasks sit in the hours they take. Drag tasks into the grid, between days or to
+  another time, stretch them to change their length, click one to edit it, or
+  click an empty slot to add a task there. On a phone, Week is a list per day.
+- **Times** – any task can have a start time and length (from its date button).
+- **Habits** – a weekly check-in grid with streaks; choose the days each habit
+  is for, and days off don't break a streak.
 - **Life areas** – create as many as you need; each has an icon, a colour,
   tasks, pages and habits.
 - **Pages** – a block editor for notes, lists and plans:

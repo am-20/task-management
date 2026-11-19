@@ -36,7 +36,12 @@ export function Popover({ anchor, onClose, children, align = 'start', className 
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+      const target = e.target as Element
+      if (!ref.current || ref.current.contains(target)) return
+      // A click inside another popover opened from this one (a date picker inside
+      // a task card, say) shouldn't close this one.
+      if (target.closest?.('.popover')) return
+      onClose()
     }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
