@@ -3001,7 +3001,6 @@ a.crumb:hover {
 .week-scroll {
   height: max(420px, calc(100dvh - 330px));
   overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
 .week-body {
@@ -3387,8 +3386,22 @@ a.crumb:hover {
   line-clamp: 2;
 }
 
+/* On a phone the whole day is part of the page: one scroll, no box inside a box. */
+.week.compact {
+  overflow: clip;
+}
+
 .week.compact .week-scroll {
-  height: max(380px, calc(100dvh - 300px));
+  height: auto;
+  overflow: visible;
+}
+
+.week.compact .week-head {
+  position: sticky;
+  top: calc(48px + env(safe-area-inset-top));
+  z-index: 6;
+  background: var(--surface);
+  border-radius: 12px 12px 0 0;
 }
 
 .week.compact .week-gutter.hours span {
@@ -3571,14 +3584,15 @@ a.crumb:hover {
   right: 0;
   bottom: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  padding-right: 22px;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
   border-radius: 9px;
   background: var(--accent);
   color: #fff5ec;
-  font-size: 14.5px;
+  font-size: 13px;
   font-weight: 600;
 }
 

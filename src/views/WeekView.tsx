@@ -201,7 +201,7 @@ function WeekGrid({ data, today, compact = false }: { data: WeekData; today: str
   useEffect(() => {
     const starts = [...data.timed.values()].flat().map((i) => toMinutes(i.task.time!))
     const first = Math.min(7 * 60, ...starts)
-    if (scrollRef.current) scrollRef.current.scrollTop = Math.max(0, ((first - range.start) / 60) * HOUR - 12)
+    if (scrollRef.current && !compact) scrollRef.current.scrollTop = Math.max(0, ((first - range.start) / 60) * HOUR - 12)
     // Only when the week changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.days[0]])
@@ -222,7 +222,8 @@ function WeekGrid({ data, today, compact = false }: { data: WeekData; today: str
   const track = (cur: Drag, x: number, y: number) => {
     const goingUp = y < cur.lastY
     cur.lastY = y
-    const scroller = scrollRef.current!
+    // On phones the grid is part of the page, so the page scrolls; on desktop the grid has its own scroll.
+    const scroller = compact ? (scrollRef.current!.closest('.main') as HTMLElement) : scrollRef.current!
     const box = scroller.getBoundingClientRect()
     if (cur.kind === 'resize' && cur.origin.time) {
       const start = toMinutes(cur.origin.time)
@@ -242,7 +243,7 @@ function WeekGrid({ data, today, compact = false }: { data: WeekData; today: str
     // Scroll the grid near its top or bottom edge (only upwards when moving up,
     // so coming down from the "Any time" row doesn't scroll it).
     if (y > box.bottom - 28 && !goingUp) scroller.scrollTop += 14
-    else if (goingUp && y < box.top + 28 && y > box.top && cur.preview.time) scroller.scrollTop -= 14
+    else if (goingUp && y < box.top + (compact ? 120 : 28) && y > box.top && cur.preview.time) scroller.scrollTop -= 14
     setDrag({ ...cur })
   }
 
