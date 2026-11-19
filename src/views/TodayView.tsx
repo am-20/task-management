@@ -1,10 +1,13 @@
 import { ArrowRight, Flame } from 'lucide-react'
-import type { CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { TaskComposer, TaskList } from '../components/tasks'
+import { Checkbox } from '../components/ui'
+import { formatDuration, formatTime, toMinutes } from '../lib/time'
 import { byDue } from '../lib/sort'
 import { TopBar } from '../components/TopBar'
-import { addDays, greeting, longDate, toKey, todayKey, weekday } from '../lib/date'
-import { habitStreak, useStore } from '../store'
+import { greeting, longDate, toKey, todayKey, weekday } from '../lib/date'
+import { habitStreak, isScheduled } from '../lib/habits'
+import { useStore } from '../store'
 
 export function TodayView() {
   const tasks = useStore((s) => s.tasks)
@@ -19,7 +22,8 @@ export function TodayView() {
   const doneToday = tasks
     .filter((t) => t.done && t.doneAt && toKey(new Date(t.doneAt)) === today)
     .sort((a, b) => (a.doneAt ?? 0) - (b.doneAt ?? 0))
-  const habitsDone = habits.filter((h) => h.log[today]).length
+  const todaysHabits = habits.filter((h) => isScheduled(h, today) || h.log[today])
+  const habitsDone = todaysHabits.filter((h) => h.log[today]).length
 
   let summary: string
   if (open.length === 0 && doneToday.length > 0) summary = 'Everything for today is done. The evening is yours.'
@@ -38,6 +42,8 @@ export function TodayView() {
           </p>
         </header>
 
+        <TodayTimeline today={today} />
+
         <section className="section">
           <div className="section-head">
             <h2>Today</h2>
@@ -54,21 +60,21 @@ export function TodayView() {
           <TaskList tasks={[...open, ...doneToday]} />
         </section>
 
-        {habits.length > 0 && (
+        {todaysHabits.length > 0 && (
           <section className="section">
             <div className="section-head">
               <h2>Habits</h2>
               <span className="count">
-                {habitsDone}/{habits.length} today
+                {habitsDone}/{todaysHabits.length} today
               </span>
               <a className="section-link" href="#/habits">
                 This week <ArrowRight size={14} />
               </a>
             </div>
             <div className="habit-chips">
-              {habits.map((h) => {
+              {todaysHabits.map((h) => {
                 const done = !!h.log[today]
-                const streak = habitStreak(h, today, addDays)
+                const streak = habitStreak(h, today)
                 return (
                   <button
                     key={h.id}
@@ -139,5 +145,50 @@ export function TodayView() {
         </section>
       </div>
     </>
+  )
+}
+
+/** Today's timed tasks as a short timeline, with what's on now highlighted. */
+function TodayTimeline({ today }: { today: string }) {
+  const tasks = useStore((s) => s.tasks)
+  const areas = useStore((s) => s.areas)
+  const toggleTask = useStore((s) => s.toggleTask)
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(new Date()), 60_000)
+    return () => window.clearInterval(t)
+  }, [])
+
+  const timed = tasks.filter((t) => t.due === today && t.time).sort(byDue)
+  if (timed.length === 0) return null
+  const nowMin = now.getHours() * 60 + now.getMinutes()
+
+  return (
+    <section className="section timeline-section">
+      <div className="section-head">
+        <h2>Schedule</h2>
+        <a className="section-link" href="#/calendar/week">
+          Week <ArrowRight size={14} />
+        </a>
+      </div>
+      <ol className="timeline">
+        {timed.map((t) => {
+          const start = toMinutes(t.time!)
+          const end = start + (t.duration ?? 60)
+          const state = t.done ? 'done' : nowMin >= end ? 'past' : nowMin >= start ? 'now' : 'next'
+          const color = areas.find((a) => a.id === t.areaId)?.color ?? 'var(--text-3)'
+          return (
+            <li key={t.id} className={`timeline-item ${state}`} style={{ '--area': color } as CSSProperties}>
+              <span className="timeline-time">{formatTime(t.time!)}</span>
+              <span className="timeline-bar" aria-hidden="true" />
+              <Checkbox checked={t.done} onChange={() => toggleTask(t.id)} color={color} label={t.done ? 'Mark as not done' : 'Mark as done'} />
+              <span className="timeline-title">{t.title || 'Untitled'}</span>
+              {state === 'now' && <span className="timeline-now">Now</span>}
+              <span className="timeline-length">{formatDuration(t.duration ?? 60)}</span>
+            </li>
+          )
+        })}
+      </ol>
+    </section>
   )
 }

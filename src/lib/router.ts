@@ -4,6 +4,7 @@ export type Route =
   | { name: 'today' }
   | { name: 'upcoming' }
   | { name: 'habits' }
+  | { name: 'calendar'; mode: 'month' | 'week' }
   | { name: 'area'; id: string }
   | { name: 'page'; id: string }
 
@@ -11,6 +12,7 @@ function parse(hash: string): Route {
   const [, name, id] = hash.replace(/^#/, '').split('/')
   if (name === 'upcoming') return { name }
   if (name === 'habits') return { name }
+  if (name === 'calendar') return { name, mode: id === 'week' ? 'week' : 'month' }
   if ((name === 'area' || name === 'page') && id) return { name, id }
   return { name: 'today' }
 }

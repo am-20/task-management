@@ -37,6 +37,33 @@ export interface Area {
   createdAt: number
 }
 
+export type RepeatUnit = 'day' | 'week' | 'month' | 'year'
+
+/** How a task repeats. Each finished occurrence stays in history; the next one is a new task. */
+export interface Repeat {
+  /** Every N units */
+  every: number
+  unit: RepeatUnit
+  /** Weekly: days of the week, 0 = Sunday … 6 = Saturday */
+  weekdays?: number[]
+  /** Monthly: on a date ('day') or on a weekday such as "the second Tuesday" ('weekday') */
+  monthBy?: 'day' | 'weekday'
+  /** Monthly by day: 1–31, or -1 for the last day of the month */
+  monthDay?: number
+  /** Monthly by weekday: 1–4 for first…fourth, or -1 for the last */
+  nth?: number
+  /** Monthly by weekday: 0 = Sunday … 6 = Saturday */
+  weekday?: number
+  /** Count the next date from when it was done rather than from the due date */
+  fromCompletion?: boolean
+  /** Stop after this date (YYYY-MM-DD) */
+  until?: string
+  /** Stop after this many occurrences */
+  count?: number
+  /** Which occurrence this is, starting at 1 */
+  occurrence?: number
+}
+
 export interface Task {
   id: string
   title: string
@@ -44,8 +71,17 @@ export interface Task {
   doneAt?: number
   /** Local date key, YYYY-MM-DD */
   due?: string
+  /** Start time on the due date, HH:mm (24-hour). Missing = any time that day */
+  time?: string
+  /** Length in minutes, for time blocking */
+  duration?: number
   areaId?: string
   createdAt: number
+  repeat?: Repeat
+  /** Shared by every occurrence of the same repeating task */
+  seriesId?: string
+  /** On a finished occurrence: the next occurrence it created, so un-ticking can undo it */
+  spawnedId?: string
 }
 
 export interface Habit {
@@ -55,6 +91,8 @@ export interface Habit {
   areaId?: string
   /** Date keys (YYYY-MM-DD) on which the habit was done */
   log: Record<string, boolean>
+  /** Days of the week it's meant for, 0 = Sunday … 6 = Saturday. Missing = every day */
+  days?: number[]
   createdAt: number
 }
 

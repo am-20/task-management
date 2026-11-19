@@ -137,6 +137,9 @@ kbd {
   position: relative;
   height: 100dvh;
   overflow-y: auto;
+  /* Never let anything nudge the page sideways while scrolling. */
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
   background:
     radial-gradient(900px 420px at 85% -120px, rgba(139, 0, 0, 0.13), transparent 70%),
     radial-gradient(700px 380px at -10% 110%, rgba(194, 98, 45, 0.06), transparent 70%),
@@ -1981,7 +1984,7 @@ a.crumb:hover {
   .task {
     flex-wrap: wrap;
     row-gap: 0;
-    padding-right: 4px;
+    padding-right: 6px;
   }
 
   .task-title {
@@ -1989,8 +1992,9 @@ a.crumb:hover {
   }
 
   .task .task-meta {
-    width: 100%;
-    margin: -5px 0 5px 24px;
+    flex: 1 1 calc(100% - 30px);
+    min-width: 0;
+    margin: -5px 0 5px 30px;
   }
 
   .task .task-delete {
@@ -2012,10 +2016,14 @@ a.crumb:hover {
 }
 
 @media (hover: none) {
-  .task-delete,
   .task .chip.unset,
   .row-action {
     opacity: 1;
+  }
+
+  /* Touch screens delete by swiping left instead */
+  .task .task-delete {
+    display: none;
   }
 }
 
@@ -2214,4 +2222,1536 @@ a.crumb:hover {
   gap: 5px;
   color: var(--ochre);
   font-size: 12.5px;
+}
+
+/* ---------- Small shared controls ---------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.segmented > button,
+.segmented > a {
+  flex: 1;
+  padding: 5px 12px;
+  border-radius: 7px;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 550;
+  text-align: center;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.segmented > .on {
+  background: var(--surface-3);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.num-input,
+.repeat-custom select,
+.inline-date {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13.5px;
+}
+
+.num-input {
+  width: 64px;
+}
+
+.num-input:focus,
+.repeat-custom select:focus,
+.inline-date:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}
+
+/* ---------- Repeat ---------- */
+
+.repeat-chip span {
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.repeat-current {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px 6px;
+  color: var(--accent-text);
+  font-size: 13.5px;
+  font-weight: 550;
+}
+
+.repeat-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 6px 6px;
+}
+
+.repeat-custom-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: -4px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.repeat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.repeat-custom .segmented {
+  display: flex;
+}
+
+.repeat-hint {
+  margin-top: -4px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.weekday-picker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.weekday-picker button {
+  height: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.weekday-picker button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff5ec;
+}
+
+.radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.radio input[type='radio'] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent-hover);
+}
+
+.repeat-section-label {
+  margin-bottom: -4px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.repeat-preview {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.repeat-save {
+  height: 36px;
+}
+
+/* ---------- Calendar ---------- */
+
+.calendar-view {
+  max-width: 1080px;
+}
+
+.cal-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.cal-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cal-title h1 {
+  min-width: 7.5em;
+  font-family: var(--serif);
+  font-size: 34px;
+  font-weight: 480;
+  letter-spacing: -0.02em;
+}
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.cal-nav .btn.small {
+  margin: 0;
+}
+
+.cal-tabs {
+  min-width: 200px;
+}
+
+.cal-grid-wrap {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(33, 25, 21, 0.55);
+  overflow: hidden;
+}
+
+.cal-weekdays,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.cal-weekdays span {
+  padding: 9px 10px 7px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.cal-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-height: 112px;
+  padding: 7px 7px 8px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.cal-day:nth-child(7n) {
+  border-right: 0;
+}
+
+.cal-day:nth-last-child(-n + 7) {
+  border-bottom: 0;
+}
+
+.cal-day:hover {
+  background: var(--hover);
+}
+
+.cal-day.outside {
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.cal-day.outside .cal-num {
+  color: var(--text-3);
+  opacity: 0.6;
+}
+
+.cal-day.selected {
+  background: var(--active);
+  box-shadow: inset 0 0 0 1.5px var(--accent-line);
+}
+
+.cal-num {
+  align-self: flex-start;
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 12px;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-day.today .cal-num {
+  background: var(--accent);
+  color: #fff5ec;
+}
+
+.cal-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cal-item {
+  display: block;
+  padding: 2px 6px 2px 7px;
+  border-left: 2.5px solid var(--dot);
+  border-radius: 4px;
+  background: rgba(244, 226, 204, 0.05);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-item.done {
+  color: var(--text-3);
+  text-decoration: line-through;
+  text-decoration-color: rgba(143, 127, 114, 0.6);
+  background: none;
+}
+
+.cal-item.late {
+  background: var(--accent-soft);
+}
+
+.cal-item.ghost {
+  border-left-style: dashed;
+  background: none;
+  color: var(--text-3);
+}
+
+.cal-more {
+  padding-left: 7px;
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+.cal-dots {
+  display: none;
+}
+
+.cal-agenda {
+  margin-top: 26px;
+}
+
+.cal-empty {
+  padding: 10px 12px;
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+.ghost-list {
+  margin-top: 10px;
+  padding: 8px 12px 10px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 11px;
+}
+
+.ghost-head {
+  padding: 2px 0 6px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.ghost-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.ghost-row svg {
+  flex: none;
+  color: var(--text-3);
+}
+
+.ghost-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ghost-rule {
+  color: var(--text-3);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .cal-title h1 {
+    min-width: 0;
+    font-size: 26px;
+  }
+
+  .cal-header {
+    gap: 10px;
+  }
+
+  .cal-tabs {
+    width: 100%;
+  }
+
+  .cal-weekdays span {
+    padding: 8px 0 6px;
+    text-align: center;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+  }
+
+  .cal-day {
+    min-height: 58px;
+    align-items: center;
+    padding: 5px 2px 6px;
+    gap: 3px;
+  }
+
+  .cal-num {
+    align-self: center;
+    font-size: 13px;
+  }
+
+  .cal-items {
+    display: none;
+  }
+
+  .cal-dots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+    max-width: 30px;
+  }
+
+  .cal-dots i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .cal-dots i.done {
+    opacity: 0.35;
+  }
+
+  .cal-dots i.ghost {
+    background: none;
+    border: 1.2px solid;
+  }
+
+  .ghost-rule {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .composer {
+    flex-wrap: wrap;
+    padding-bottom: 4px;
+  }
+
+  .composer input:not([type='date']) {
+    flex: 1 1 calc(100% - 40px);
+  }
+
+  .composer .task-meta {
+    flex: 1 1 calc(100% - 27px);
+    min-width: 0;
+    margin: -6px 0 2px 27px;
+  }
+}
+
+
+/* ---------- Habit schedules ---------- */
+
+.schedule-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 9px 6px;
+}
+
+.schedule-presets {
+  display: flex;
+  gap: 6px;
+}
+
+.schedule-presets button {
+  flex: 1;
+  height: 28px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.schedule-presets button:hover,
+.schedule-presets button.on {
+  border-color: var(--accent-line);
+  color: var(--text);
+}
+
+.schedule-note {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.habit-schedule {
+  color: var(--text-3);
+}
+
+.day-cell.rest:not(.done) {
+  border-style: dashed;
+  border-color: var(--border);
+  opacity: 0.55;
+}
+
+.habit-chip.rest {
+  opacity: 0.55;
+}
+
+/* Drag a task to another day */
+.cal-day {
+  cursor: pointer;
+}
+
+.cal-item[draggable='true'] {
+  cursor: grab;
+}
+
+.cal-item[draggable='true']:active {
+  cursor: grabbing;
+}
+
+.cal-grid.dragging .cal-day:not(.drop) {
+  background: transparent;
+}
+
+.cal-day.drop {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent-hover);
+}
+
+/* ---------- Time in the date picker ---------- */
+
+.time-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 9px;
+  color: var(--text-2);
+}
+
+.time-field input,
+.time-field select {
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.time-field input:focus,
+.time-field select:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}
+
+.time-hint {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+/* ---------- Week (time grid) ---------- */
+
+.calendar-view.wide {
+  max-width: 1320px;
+}
+
+.week {
+  --gutter: 58px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(33, 25, 21, 0.55);
+  overflow: hidden;
+  user-select: none;
+}
+
+.week.is-dragging,
+.week.is-dragging * {
+  cursor: grabbing !important;
+}
+
+.week-row {
+  display: grid;
+  grid-template-columns: var(--gutter) repeat(7, minmax(0, 1fr));
+}
+
+.week-head {
+  border-bottom: 1px solid var(--border);
+}
+
+.week-day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 10px 10px 8px;
+  border-left: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.week-day-head b {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 550;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.week-day-head.past b {
+  color: var(--text-2);
+}
+
+.week-day-head.today {
+  color: var(--accent-text);
+}
+
+.week-day-head.today b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff5ec;
+  font-size: 15px;
+}
+
+/* "Any time" lane: every untimed task, nothing hidden */
+
+.week-lane {
+  border-bottom: 1px solid var(--border-strong);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.lane-label {
+  padding: 10px 8px 0 0;
+  color: var(--text-3);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: right;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.lane-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 52px;
+  padding: 6px 5px 26px;
+  border-left: 1px solid var(--border);
+  cursor: copy;
+}
+
+.lane-cell.drop {
+  background: var(--accent-soft);
+}
+
+.lane-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 7px 3px 6px;
+  border-left: 3px solid var(--area);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--area) 14%, var(--surface));
+  font-size: 12.5px;
+  line-height: 1.3;
+  cursor: grab;
+  transition: background 0.12s;
+}
+
+.lane-item:hover {
+  background: color-mix(in srgb, var(--area) 22%, var(--surface));
+}
+
+.lane-item .check {
+  width: 15px;
+  height: 15px;
+}
+
+.lane-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lane-item.done .lane-title {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+.lane-item.ghost {
+  border-left-style: dashed;
+  background: none;
+  color: var(--text-3);
+  cursor: default;
+}
+
+.lane-item.preview {
+  opacity: 0.85;
+  box-shadow: 0 0 0 1.5px var(--accent-hover);
+}
+
+.lane-add {
+  position: absolute;
+  left: 5px;
+  bottom: 4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 20px;
+  border-radius: 5px;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.lane-cell:hover .lane-add,
+.lane-add:focus-visible {
+  opacity: 1;
+}
+
+.lane-add:hover {
+  background: var(--active);
+  color: var(--text);
+}
+
+/* Hours */
+
+.week-scroll {
+  height: max(420px, calc(100dvh - 330px));
+  overflow-y: auto;
+}
+
+.week-body {
+  position: relative;
+}
+
+.week-gutter.hours {
+  position: relative;
+}
+
+.week-gutter.hours span {
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.week-col {
+  position: relative;
+  border-left: 1px solid var(--border);
+  background-image: linear-gradient(to bottom, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(244, 226, 204, 0.03) 1px, transparent 1px);
+  background-size:
+    100% var(--hour, 52px),
+    100% calc(var(--hour, 52px) / 2);
+  cursor: copy;
+}
+
+.week-col.today {
+  background-color: rgba(139, 0, 0, 0.06);
+}
+
+.block {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 6px 4px 7px;
+  overflow: hidden;
+  border-left: 3px solid var(--area);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--area) 26%, var(--surface-2));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  font-size: 12.5px;
+  line-height: 1.25;
+  cursor: grab;
+  z-index: 1;
+  transition: background 0.12s;
+}
+
+.block:hover {
+  background: color-mix(in srgb, var(--area) 36%, var(--surface-2));
+  z-index: 2;
+}
+
+.block.short {
+  flex-direction: row;
+  align-items: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.block-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.block.short .block-top {
+  align-items: center;
+}
+
+.block .check {
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+}
+
+.block-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 550;
+}
+
+.block-time {
+  color: var(--text-2);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.block.done {
+  opacity: 0.55;
+}
+
+.block.done .block-title {
+  text-decoration: line-through;
+}
+
+.block.ghost {
+  border-left-style: dashed;
+  background: rgba(244, 226, 204, 0.04);
+  box-shadow: none;
+  color: var(--text-3);
+  cursor: default;
+}
+
+.block.preview {
+  z-index: 5;
+  opacity: 0.92;
+  box-shadow:
+    0 0 0 1.5px var(--accent-hover),
+    0 10px 24px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.block-resize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 7px;
+  cursor: ns-resize;
+}
+
+.block-resize::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 18px;
+  height: 2px;
+  margin-left: -9px;
+  border-radius: 2px;
+  background: rgba(244, 226, 204, 0.35);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.block:hover .block-resize::after {
+  opacity: 1;
+}
+
+.now-line {
+  position: absolute;
+  left: -1px;
+  right: 0;
+  height: 2px;
+  background: var(--accent-text);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.now-line::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-text);
+}
+
+/* Task card opened from the grid */
+
+.task-popover {
+  padding: 8px;
+}
+
+.task-popover .task {
+  padding-left: 6px;
+}
+
+.task-popover .composer {
+  margin: 0;
+}
+
+.task-popover-note {
+  padding: 4px 8px 8px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+/* ---------- Week (phone: one list per day) ---------- */
+
+.week-agenda {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agenda-day {
+  padding: 6px 0 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.agenda-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 2px 6px 4px;
+}
+
+.agenda-date {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: none;
+}
+
+.agenda-date b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.agenda-date span {
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 550;
+}
+
+.agenda-day.today .agenda-date b {
+  background: var(--accent);
+  color: #fff5ec;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.agenda-day.today .agenda-date span {
+  color: var(--accent-text);
+}
+
+.agenda-day.past .agenda-date {
+  opacity: 0.6;
+}
+
+.agenda-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 0 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 11px;
+  color: var(--text-3);
+  font-size: 14.5px;
+}
+
+.agenda-add:active {
+  background: var(--hover);
+}
+
+.agenda-day .composer {
+  margin-top: 4px;
+}
+
+
+.ghost-time {
+  margin-right: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lane-item.source,
+.block.source {
+  opacity: 0.3;
+}
+
+/* The task card: details on their own line so the name has room */
+.task-popover .task {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.task-popover .task-title {
+  flex: 1 1 calc(100% - 40px);
+}
+
+.task-popover .task .task-meta {
+  flex: 1 1 calc(100% - 30px);
+  min-width: 0;
+  margin: -4px 0 6px 30px;
+}
+
+.task-popover .task .chip.unset,
+.task-popover .task .task-delete {
+  opacity: 1;
+}
+
+.task-popover .task .task-delete {
+  margin-left: auto;
+}
+
+/* ---------- Week on a phone: switch and compact columns ---------- */
+
+.week-layout {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.week-layout button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+}
+
+.week.compact {
+  --gutter: 26px;
+  margin: 0 -10px;
+  border-radius: 12px;
+}
+
+.week.compact .week-day-head {
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 0 5px;
+  font-size: 10px;
+}
+
+.week.compact .week-day-head b {
+  font-size: 15px;
+}
+
+.week.compact .week-day-head.today b {
+  min-width: 24px;
+  height: 24px;
+  font-size: 13px;
+}
+
+.week.compact .lane-label {
+  padding: 8px 2px 0 0;
+  font-size: 8.5px;
+  letter-spacing: 0;
+}
+
+.week.compact .lane-cell {
+  gap: 2px;
+  min-height: 36px;
+  padding: 3px 2px 6px;
+  cursor: default;
+}
+
+.week.compact .lane-item {
+  min-height: 0;
+  padding: 3px 3px 3px 4px;
+  border-left-width: 2px;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.week.compact .lane-title,
+.week.compact .block-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.week.compact .lane-title {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* On a phone the whole day is part of the page: one scroll, no box inside a box. */
+.week.compact {
+  overflow: clip;
+}
+
+.week.compact .week-scroll {
+  height: auto;
+  overflow: visible;
+}
+
+.week.compact .week-head {
+  position: sticky;
+  top: calc(48px + env(safe-area-inset-top));
+  z-index: 6;
+  background: var(--surface);
+  border-radius: 12px 12px 0 0;
+}
+
+.week.compact .week-gutter.hours span {
+  right: 4px;
+  font-size: 9.5px;
+}
+
+.week.compact .block {
+  padding: 2px 3px 2px 4px;
+  border-left-width: 2px;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.week.compact .block.short {
+  align-items: flex-start;
+}
+
+.week.compact .block-title {
+  font-weight: 600;
+}
+
+.week.compact .block-resize {
+  height: 12px;
+}
+
+.week.compact .week-col {
+  cursor: default;
+}
+
+/* Pressing and holding shouldn't select text or open the phone's menu */
+.week.compact .lane-item,
+.week.compact .block {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+.week-hint {
+  margin-top: 10px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* ---------- Pop-ups on phones: centred, with bigger targets ---------- */
+
+.popover-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 109;
+  background: rgba(9, 6, 5, 0.55);
+  animation: fade 0.16s ease both;
+}
+
+.popover.sheet {
+  inset: 0;
+  margin: auto;
+  width: min(calc(100vw - 32px), 420px);
+  height: fit-content;
+  max-height: min(80dvh, 640px);
+  padding: 10px;
+  border-radius: 18px;
+}
+
+/* A pop-up opened from another one dims the page only once */
+.popover-scrim ~ .popover-scrim {
+  background: rgba(9, 6, 5, 0.35);
+}
+
+.sheet .menu-item {
+  min-height: 48px;
+  padding: 0 12px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+
+.sheet .menu-icon {
+  width: 24px;
+}
+
+.sheet .menu-heading {
+  padding: 10px 12px 6px;
+  font-size: 12px;
+}
+
+.sheet .menu-hint {
+  font-size: 14px;
+}
+
+.sheet .date-field,
+.sheet .time-field {
+  padding: 8px 8px 8px 12px;
+  font-size: 15px;
+}
+
+.sheet .date-field input,
+.sheet .time-field input,
+.sheet .time-field select,
+.sheet .num-input,
+.sheet .repeat-custom select,
+.sheet .inline-date {
+  height: 42px;
+  font-size: 16px;
+}
+
+.sheet .time-field input {
+  min-width: 110px;
+}
+
+.sheet .weekday-picker button {
+  height: 42px;
+  font-size: 15px;
+}
+
+.sheet .radio {
+  min-height: 44px;
+  font-size: 16px;
+}
+
+.sheet .radio input[type='radio'] {
+  width: 20px;
+  height: 20px;
+}
+
+.sheet .repeat-save {
+  height: 46px;
+  font-size: 16px;
+}
+
+.sheet .emoji-grid {
+  grid-template-columns: repeat(8, 1fr);
+}
+
+.sheet .emoji-cell {
+  width: auto;
+  height: 42px;
+  font-size: 22px;
+}
+
+.sheet .schedule-presets button {
+  height: 38px;
+  font-size: 13.5px;
+}
+
+.sheet .swatch {
+  width: 30px;
+  height: 30px;
+}
+
+/* ---------- Swipe to delete ---------- */
+
+.task-swipe {
+  position: relative;
+  border-radius: 9px;
+}
+
+.task-swipe.open {
+  overflow: hidden;
+}
+
+.task-swipe > .task {
+  position: relative;
+  touch-action: pan-y;
+  transition: transform 0.22s var(--ease);
+}
+
+/* Solid while sliding, so the red Delete shows only beside the row */
+.task-swipe.open > .task {
+  background: var(--bg);
+}
+
+.popover .task-swipe.open > .task {
+  background: var(--surface-2);
+}
+
+.swipe-delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #fff5ec;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.task-delete:hover {
+  color: var(--accent-text);
+}
+
+/* ---------- Toast ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 10px 10px 16px;
+  transform: translateX(-50%);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-3);
+  box-shadow: var(--shadow);
+  font-size: 14px;
+  animation: toast-in 0.22s var(--ease) both;
+}
+
+.toast span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toast button {
+  flex: none;
+  padding: 7px 12px;
+  border-radius: 8px;
+  color: var(--accent-text);
+  font-weight: 650;
+}
+
+.toast button:hover {
+  background: var(--active);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+}
+
+.cal-add {
+  margin-top: 10px;
+}
+
+/* ---------- Today: schedule timeline ---------- */
+
+.timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(33, 25, 21, 0.55);
+  overflow: hidden;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 14px 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.timeline-item:last-child {
+  border-bottom: 0;
+}
+
+.timeline-time {
+  width: 4.6em;
+  flex: none;
+  color: var(--text-2);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline-bar {
+  align-self: stretch;
+  width: 3px;
+  margin: 9px 0;
+  flex: none;
+  border-radius: 2px;
+  background: var(--area);
+}
+
+.timeline-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeline-length {
+  flex: none;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.timeline-now {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff5ec;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.timeline-item.now {
+  background: var(--accent-soft);
+}
+
+.timeline-item.past .timeline-title,
+.timeline-item.past .timeline-time {
+  color: var(--text-3);
+}
+
+.timeline-item.done .timeline-title {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+.timeline-item.done .timeline-bar {
+  opacity: 0.4;
+}
+
+.card-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 2px 8px 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: var(--accent-text);
+  font-size: 13.5px;
+}
+
+.card-delete:hover {
+  background: var(--accent-soft);
+}
+
+.sheet .card-delete {
+  min-height: 44px;
+  font-size: 15.5px;
 }

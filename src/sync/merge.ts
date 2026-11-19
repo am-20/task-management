@@ -1,4 +1,4 @@
-import type { DataSnapshot } from '../types'
+import type { DataSnapshot, Task } from '../types'
 
 /** Deep equality that ignores key order and treats missing and undefined keys alike. */
 export function same(a: unknown, b: unknown): boolean {
@@ -56,11 +56,28 @@ export function mergeList<T extends WithId>(base: T[], local: T[], remote: T[]):
   return out
 }
 
+/**
+ * If the same repeating task was ticked off on two devices before they synced, each made
+ * its own "next" copy. Keep one open occurrence per series and date, preferring the copy
+ * the finished task points to.
+ */
+export function dedupeOccurrences(tasks: Task[]): Task[] {
+  const referenced = new Set(tasks.map((t) => t.spawnedId).filter(Boolean))
+  const keep = new Map<string, Task>()
+  for (const t of tasks) {
+    if (t.done || !t.seriesId || !t.repeat) continue
+    const key = `${t.seriesId}|${t.due}`
+    const current = keep.get(key)
+    if (!current || (!referenced.has(current.id) && referenced.has(t.id))) keep.set(key, t)
+  }
+  return tasks.filter((t) => t.done || !t.seriesId || !t.repeat || keep.get(`${t.seriesId}|${t.due}`) === t)
+}
+
 export function mergeSnapshots(base: DataSnapshot, local: DataSnapshot, remote: DataSnapshot): DataSnapshot {
   return {
     areas: mergeList(base.areas, local.areas, remote.areas),
     pages: mergeList(base.pages, local.pages, remote.pages),
-    tasks: mergeList(base.tasks, local.tasks, remote.tasks),
+    tasks: dedupeOccurrences(mergeList(base.tasks, local.tasks, remote.tasks)),
     habits: mergeList(base.habits, local.habits, remote.habits),
   }
 }
