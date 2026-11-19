@@ -1,7 +1,9 @@
 import { Check } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useIsPhone } from '../lib/useMedia'
 import { getConfirm, settleConfirm, subscribeConfirm } from '../lib/confirm'
+import { dismissToast, getToast, subscribeToast } from '../lib/toast'
 import { usePopover } from '../lib/usePopover'
 
 /* ---------- Popover ---------- */
@@ -17,11 +19,14 @@ interface PopoverProps {
 
 export function Popover({ anchor, onClose, children, align = 'start', className = '', width }: PopoverProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const scrimRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
+  // On phones, pop-ups open in the middle of the screen with bigger targets.
+  const sheet = useIsPhone()
 
   useLayoutEffect(() => {
     const el = ref.current
-    if (!el) return
+    if (!el || sheet) return
     const { width: w, height: h } = el.getBoundingClientRect()
     const margin = 8
     let left = align === 'end' ? anchor.right - w : anchor.left
@@ -32,15 +37,16 @@ export function Popover({ anchor, onClose, children, align = 'start', className 
     }
     left = Math.max(margin, Math.min(left, window.innerWidth - w - margin))
     setPos({ left, top })
-  }, [anchor, align])
+  }, [anchor, align, sheet])
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
       const target = e.target as Element
+      if (target === scrimRef.current) return onClose()
       if (!ref.current || ref.current.contains(target)) return
-      // A click inside another popover opened from this one (a date picker inside
+      // A click inside another pop-up opened from this one (a date picker inside
       // a task card, say) shouldn't close this one.
-      if (target.closest?.('.popover')) return
+      if (target.closest?.('.popover, .popover-scrim')) return
       onClose()
     }
     const onKey = (e: KeyboardEvent) => {
@@ -51,13 +57,27 @@ export function Popover({ anchor, onClose, children, align = 'start', className 
     }
     document.addEventListener('mousedown', onDown, true)
     document.addEventListener('keydown', onKey, true)
-    window.addEventListener('resize', onClose)
+    // A floating pop-up would be left behind if the window changes size. Not for
+    // centred ones: on phones the keyboard opening resizes the window.
+    if (!sheet) window.addEventListener('resize', onClose)
     return () => {
       document.removeEventListener('mousedown', onDown, true)
       document.removeEventListener('keydown', onKey, true)
       window.removeEventListener('resize', onClose)
     }
-  }, [onClose])
+  }, [onClose, sheet])
+
+  if (sheet) {
+    return createPortal(
+      <>
+        <div ref={scrimRef} className="popover-scrim" aria-hidden="true" />
+        <div ref={ref} className={`popover sheet ${className}`} role="dialog" aria-modal="true">
+          {children}
+        </div>
+      </>,
+      document.body,
+    )
+  }
 
   const style: CSSProperties = pos
     ? { left: pos.left, top: pos.top, width }
@@ -215,6 +235,30 @@ export function ConfirmHost() {
           </button>
         </div>
       </div>
+    </div>,
+    document.body,
+  )
+}
+
+/* ---------- Toast ---------- */
+
+export function ToastHost() {
+  const toast = useSyncExternalStore(subscribeToast, getToast)
+  if (!toast) return null
+  return createPortal(
+    <div className="toast" role="status" aria-live="polite" key={toast.id}>
+      <span>{toast.message}</span>
+      {toast.action && (
+        <button
+          type="button"
+          onClick={() => {
+            toast.action!.run()
+            dismissToast()
+          }}
+        >
+          {toast.action.label}
+        </button>
+      )}
     </div>,
     document.body,
   )

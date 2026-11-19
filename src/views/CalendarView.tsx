@@ -287,7 +287,6 @@ function TasksMonth({ days, monthIndex, today, selected, onSelect }: MonthProps)
           <h2>{selected === today ? 'Today' : weekday(selected)}</h2>
           <span className="count">{longDate(selected)}</span>
         </div>
-        <TaskComposer key={selected} defaultDue={selected} placeholder={`Add a task for ${selected === today ? 'today' : longDate(selected)}`} />
         <TaskList tasks={dayTasks} />
         {dayGhosts.length > 0 && (
           <div className="ghost-list">
@@ -302,6 +301,14 @@ function TasksMonth({ days, monthIndex, today, selected, onSelect }: MonthProps)
           </div>
         )}
         {dayTasks.length === 0 && dayGhosts.length === 0 && <p className="cal-empty">Nothing planned for this day.</p>}
+        {/* New tasks can't be due in the past, so a past day offers today instead. */}
+        <div className="cal-add">
+          <TaskComposer
+            key={selected < today ? today : selected}
+            defaultDue={selected < today ? today : selected}
+            placeholder={selected <= today ? 'Add a task for today' : `Add a task for ${longDate(selected)}`}
+          />
+        </div>
       </section>
     </>
   )

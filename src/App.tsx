@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { QuickFind } from './components/QuickFind'
 import { Sidebar } from './components/Sidebar'
-import { ConfirmHost } from './components/ui'
+import { ConfirmHost, ToastHost } from './components/ui'
 import { useRoute } from './lib/router'
 import { useStore } from './store'
 import { AreaView } from './views/AreaView'
@@ -54,6 +54,7 @@ export default function App() {
       </main>
       {finding && <QuickFind onClose={() => setFinding(false)} />}
       <ConfirmHost />
+      <ToastHost />
     </div>
   )
 }

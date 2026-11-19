@@ -24,7 +24,12 @@ keeps working offline.
   time blocking: an "Any time" row lists every task without a time, and timed
   tasks sit in the hours they take. Drag tasks into the grid, between days or to
   another time, stretch them to change their length, click one to edit it, or
-  click an empty slot to add a task there. On a phone, Week is a list per day.
+  click an empty slot to add a task there. Hours run 5:00–23:00 and stretch
+  for earlier or later tasks. On a phone, Week shows time columns (hold a task
+  to drag it) or a list per day.
+- **Today** – a schedule of today's timed tasks above the full list.
+- **Deleting** – swipe a task left on a phone, or use the trash icon on a
+  computer; every delete can be undone for a few seconds.
 - **Times** – any task can have a start time and length (from its date button).
 - **Repeating tasks** – daily, every N days, weekdays, chosen days of the week,
   every N weeks, monthly on a date / the last day / e.g. the second Tuesday or
@@ -36,7 +41,12 @@ keeps working offline.
   time blocking: an "Any time" row lists every task without a time, and timed
   tasks sit in the hours they take. Drag tasks into the grid, between days or to
   another time, stretch them to change their length, click one to edit it, or
-  click an empty slot to add a task there. On a phone, Week is a list per day.
+  click an empty slot to add a task there. Hours run 5:00–23:00 and stretch
+  for earlier or later tasks. On a phone, Week shows time columns (hold a task
+  to drag it) or a list per day.
+- **Today** – a schedule of today's timed tasks above the full list.
+- **Deleting** – swipe a task left on a phone, or use the trash icon on a
+  computer; every delete can be undone for a few seconds.
 - **Times** – any task can have a start time and length (from its date button).
 - **Habits** – a weekly check-in grid with streaks; choose the days each habit
   is for, and days off don't break a streak.

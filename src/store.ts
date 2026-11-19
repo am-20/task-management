@@ -11,6 +11,8 @@ interface State extends DataSnapshot {
   /** Areas whose page list is open in the sidebar */
   expanded: Record<string, boolean>
   sidebarOpen: boolean
+  /** Week view on a phone: time columns or a list per day (this device only) */
+  weekLayout: 'columns' | 'list'
 
   addArea: () => string
   updateArea: (id: string, patch: Partial<Area>) => void
@@ -29,6 +31,8 @@ interface State extends DataSnapshot {
   /** Move a repeating task to its next date without marking it done */
   skipOccurrence: (id: string) => void
   deleteTask: (id: string) => void
+  /** Put a deleted task back where it was (for Undo) */
+  restoreTask: (task: Task, index: number) => void
 
   addHabit: (habit: { name: string; icon?: string; areaId?: string }) => void
   updateHabit: (id: string, patch: Partial<Habit>) => void
@@ -37,6 +41,7 @@ interface State extends DataSnapshot {
 
   toggleExpanded: (id: string, open?: boolean) => void
   setSidebarOpen: (open: boolean) => void
+  setWeekLayout: (layout: 'columns' | 'list') => void
 
   importData: (data: DataSnapshot) => void
   /** Replace the data with a copy from the cloud, keeping UI state such as open folders */
@@ -125,6 +130,7 @@ export const useStore = create<State>()(
       ...createSeed(),
       expanded: {},
       sidebarOpen: true,
+      weekLayout: 'columns',
 
       addArea: () => {
         const id = uid()
@@ -270,6 +276,13 @@ export const useStore = create<State>()(
           }),
         })),
       deleteTask: (id) => set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
+      restoreTask: (task, index) =>
+        set((s) => {
+          if (s.tasks.some((t) => t.id === task.id)) return {}
+          const tasks = [...s.tasks]
+          tasks.splice(Math.max(0, Math.min(index, tasks.length)), 0, task)
+          return { tasks }
+        }),
 
       addHabit: ({ name, icon = '🍂', areaId }) => {
         const clean = name.trim()
@@ -295,6 +308,7 @@ export const useStore = create<State>()(
       toggleExpanded: (id, open) =>
         set((s) => ({ expanded: { ...s.expanded, [id]: open ?? !s.expanded[id] } })),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
+      setWeekLayout: (weekLayout) => set({ weekLayout }),
 
       importData: (data) => set({ ...normalizeSnapshot(data), expanded: {} }),
       applyRemote: (data) => set(normalizeSnapshot(data)),
@@ -311,6 +325,7 @@ export const useStore = create<State>()(
         habits: s.habits,
         expanded: s.expanded,
         sidebarOpen: s.sidebarOpen,
+        weekLayout: s.weekLayout,
       }),
     },
   ),

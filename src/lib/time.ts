@@ -40,3 +40,20 @@ export function formatHour(hour: number): string {
   if (!twelve) return `${String(hour).padStart(2, '0')}:00`
   return new Date(2000, 0, 1, hour).toLocaleTimeString(undefined, { hour: 'numeric' })
 }
+
+/**
+ * The hours the week grid shows: 5:00–23:00, stretched to whole hours to take in
+ * any task that starts earlier or ends later.
+ */
+export function hourRange(items: { time?: string; duration?: number }[]): { start: number; end: number } {
+  let start = 5 * 60
+  let end = 23 * 60
+  for (const t of items) {
+    if (!t.time) continue
+    const s = toMinutes(t.time)
+    const e = Math.min(24 * 60, s + (t.duration ?? 60))
+    start = Math.min(start, Math.floor(s / 60) * 60)
+    end = Math.max(end, Math.ceil(e / 60) * 60)
+  }
+  return { start, end: Math.min(24 * 60, end) }
+}

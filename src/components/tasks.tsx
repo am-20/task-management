@@ -1,7 +1,8 @@
-import { CalendarDays, CircleSlash, Clock, Plus, X } from 'lucide-react'
+import { CalendarDays, CircleSlash, Clock, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { addDays, nextMonday, nextSaturday, relativeLabel, todayKey, weekday } from '../lib/date'
 import { DURATIONS, formatDuration, formatTime } from '../lib/time'
+import { showToast } from '../lib/toast'
 import { useStore } from '../store'
 import type { Area, Repeat, Task } from '../types'
 import { usePopover } from '../lib/usePopover'
@@ -172,53 +173,125 @@ function AreaChip({ area, onChange }: { area?: Area; onChange: (areaId?: string)
 
 /* ---------- Task row ---------- */
 
+const SWIPE_OPEN = 96
+const SWIPE_DELETE = 170
+
 export function TaskRow({ task, showArea = true }: { task: Task; showArea?: boolean }) {
   const area = useStore((s) => s.areas.find((a) => a.id === task.areaId))
   const updateTask = useStore((s) => s.updateTask)
   const toggleTask = useStore((s) => s.toggleTask)
   const deleteTask = useStore((s) => s.deleteTask)
+  const restoreTask = useStore((s) => s.restoreTask)
   const setRepeat = useStore((s) => s.setRepeat)
   const skipOccurrence = useStore((s) => s.skipOccurrence)
 
+  // Swipe left to delete (touch screens).
+  const [offset, setOffset] = useState(0)
+  const [swiping, setSwiping] = useState(false)
+  const swipe = useRef<{ x: number; y: number; start: number; horizontal?: boolean } | null>(null)
+
+  const remove = () => {
+    const index = useStore.getState().tasks.findIndex((t) => t.id === task.id)
+    const copy = task
+    deleteTask(task.id)
+    showToast(`Deleted “${copy.title || 'Untitled'}”`, { label: 'Undo', run: () => restoreTask(copy, index) })
+  }
+
+  const endSwipe = () => {
+    const s = swipe.current
+    swipe.current = null
+    setSwiping(false)
+    if (!s?.horizontal) return
+    if (offset <= -SWIPE_DELETE) remove()
+    else setOffset(offset < -40 ? -SWIPE_OPEN : 0)
+  }
+
   return (
-    <div className={`task${task.done ? ' done' : ''}`}>
-      <Checkbox
-        checked={task.done}
-        onChange={() => toggleTask(task.id)}
-        color={area?.color}
-        label={task.done ? 'Mark as not done' : 'Mark as done'}
-      />
-      <input
-        className="task-title"
-        value={task.title}
-        aria-label="Task"
-        placeholder="Untitled task"
-        onChange={(e) => updateTask(task.id, { title: e.target.value })}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur()
-        }}
-        onBlur={(e) => {
-          if (!e.target.value.trim()) deleteTask(task.id)
-        }}
-      />
-      <div className="task-meta">
-        {showArea && <AreaChip area={area} onChange={(areaId) => updateTask(task.id, { areaId })} />}
-        {!task.done && (
-          <RepeatChip
-            value={task.repeat}
-            base={task.due}
-            onChange={(rule) => setRepeat(task.id, rule)}
-            onSkip={() => skipOccurrence(task.id)}
-          />
-        )}
-        <DueChip
-          value={{ due: task.due, time: task.time, duration: task.duration }}
-          done={task.done}
-          onChange={(when) => updateTask(task.id, { due: when.due, time: when.time, duration: when.duration })}
-        />
-        <button type="button" className="icon-btn subtle task-delete" aria-label="Delete task" title="Delete" onClick={() => deleteTask(task.id)}>
-          <X size={15} />
+    <div className={`task-swipe${offset ? ' open' : ''}`}>
+      {offset !== 0 && (
+        <button
+          type="button"
+          className="swipe-delete"
+          style={{ width: Math.max(SWIPE_OPEN, -offset) }}
+          onClick={remove}
+          aria-label="Delete task"
+        >
+          <Trash2 size={18} />
+          <span>Delete</span>
         </button>
+      )}
+      <div
+        className={`task${task.done ? ' done' : ''}`}
+        style={offset ? { transform: `translateX(${offset}px)`, transition: swiping ? 'none' : undefined } : undefined}
+        onPointerDown={(e) => {
+          if (e.pointerType !== 'touch') return
+          swipe.current = { x: e.clientX, y: e.clientY, start: offset }
+        }}
+        onPointerMove={(e) => {
+          const s = swipe.current
+          if (!s) return
+          const dx = e.clientX - s.x
+          const dy = e.clientY - s.y
+          if (s.horizontal === undefined) {
+            if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
+            s.horizontal = Math.abs(dx) > Math.abs(dy)
+            if (!s.horizontal) {
+              swipe.current = null
+              return
+            }
+            setSwiping(true)
+          }
+          setOffset(Math.min(0, Math.max(-window.innerWidth, s.start + dx)))
+        }}
+        onPointerUp={endSwipe}
+        onPointerCancel={endSwipe}
+        onClickCapture={(e) => {
+          // While the delete button is showing, a tap on the row just closes it.
+          if (offset && !swiping) {
+            e.preventDefault()
+            e.stopPropagation()
+            setOffset(0)
+          }
+        }}
+      >
+        <Checkbox
+          checked={task.done}
+          onChange={() => toggleTask(task.id)}
+          color={area?.color}
+          label={task.done ? 'Mark as not done' : 'Mark as done'}
+        />
+        <input
+          className="task-title"
+          value={task.title}
+          aria-label="Task"
+          placeholder="Untitled task"
+          onChange={(e) => updateTask(task.id, { title: e.target.value })}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur()
+          }}
+          onBlur={(e) => {
+            if (!e.target.value.trim()) deleteTask(task.id)
+          }}
+        />
+        <div className="task-meta">
+          {showArea && <AreaChip area={area} onChange={(areaId) => updateTask(task.id, { areaId })} />}
+          {!task.done && (
+            <RepeatChip
+              value={task.repeat}
+              base={task.due}
+              onChange={(rule) => setRepeat(task.id, rule)}
+              onSkip={() => skipOccurrence(task.id)}
+            />
+          )}
+          <DueChip
+            value={{ due: task.due, time: task.time, duration: task.duration }}
+            done={task.done}
+            onChange={(when) => updateTask(task.id, { due: when.due, time: when.time, duration: when.duration })}
+          />
+          <button type="button" className="icon-btn subtle task-delete" aria-label="Delete task" title="Delete" onClick={remove}>
+            <Trash2 size={14} />
+          </button>
+        </div>
       </div>
     </div>
   )
