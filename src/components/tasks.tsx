@@ -1,12 +1,14 @@
-import { CalendarDays, CircleSlash, Clock, Plus, Trash2 } from 'lucide-react'
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
+import { CalendarDays, CircleSlash, Clock, ListChecks, Plus, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { addDays, nextMonday, nextSaturday, relativeLabel, todayKey, weekday } from '../lib/date'
 import { DURATIONS, formatDuration, formatTime } from '../lib/time'
+import { stepInfo } from '../lib/steps'
 import { showToast } from '../lib/toast'
 import { useStore } from '../store'
 import type { Area, Repeat, Task } from '../types'
 import { usePopover } from '../lib/usePopover'
 import { RepeatChip } from './repeat'
+import { TaskDetail } from './TaskDetail'
 import { Checkbox, MenuDivider, MenuItem, Popover } from './ui'
 
 /* ---------- Pickers ---------- */
@@ -110,7 +112,7 @@ export function AreaMenu({ value, onChange }: { value?: string; onChange: (areaI
   )
 }
 
-function DueChip({ value, onChange, done }: { value: When; onChange: (when: When) => void; done?: boolean }) {
+export function DueChip({ value, onChange, done }: { value: When; onChange: (when: When) => void; done?: boolean }) {
   const pop = usePopover()
   const today = todayKey()
   const due = value.due
@@ -136,7 +138,7 @@ function DueChip({ value, onChange, done }: { value: When; onChange: (when: When
   )
 }
 
-function AreaChip({ area, onChange }: { area?: Area; onChange: (areaId?: string) => void }) {
+export function AreaChip({ area, onChange }: { area?: Area; onChange: (areaId?: string) => void }) {
   const pop = usePopover()
   return (
     <>
@@ -184,6 +186,10 @@ export function TaskRow({ task, showArea = true }: { task: Task; showArea?: bool
   const restoreTask = useStore((s) => s.restoreTask)
   const setRepeat = useStore((s) => s.setRepeat)
   const skipOccurrence = useStore((s) => s.skipOccurrence)
+  const toggleStep = useStore((s) => s.toggleStep)
+  const steps = stepInfo(task)
+  const [open, setOpen] = useState(false)
+  const close = useCallback(() => setOpen(false), [])
 
   // Swipe left to delete (touch screens).
   const [offset, setOffset] = useState(0)
@@ -288,11 +294,52 @@ export function TaskRow({ task, showArea = true }: { task: Task; showArea?: bool
             done={task.done}
             onChange={(when) => updateTask(task.id, { due: when.due, time: when.time, duration: when.duration })}
           />
+          <button
+            type="button"
+            className={`chip steps-chip${steps.total ? '' : ' unset'}`}
+            onClick={() => setOpen(true)}
+            aria-label={steps.total ? `Steps: ${steps.done} of ${steps.total} done. Open` : 'Add steps or a note'}
+            title={steps.total ? 'Steps and note' : 'Add steps or a note'}
+          >
+            <ListChecks size={13} />
+            {steps.total > 0 && (
+              <span>
+                {steps.done}/{steps.total}
+              </span>
+            )}
+            {!steps.total && task.note && <span>Note</span>}
+          </button>
           <button type="button" className="icon-btn subtle task-delete" aria-label="Delete task" title="Delete" onClick={remove}>
             <Trash2 size={14} />
           </button>
         </div>
+        {!task.done && steps.total > 0 && (
+          <div className="task-step">
+            {steps.next ? (
+              <>
+                <Checkbox
+                  round={false}
+                  checked={false}
+                  onChange={() => toggleStep(task.id, steps.next!.id)}
+                  color={area?.color}
+                  label={`Done: ${steps.next.title}`}
+                />
+                <button type="button" className="task-step-title" onClick={() => setOpen(true)}>
+                  {steps.next.title || 'Untitled step'}
+                </button>
+                <span className="task-step-count">
+                  step {steps.nextNumber} of {steps.total}
+                </span>
+              </>
+            ) : (
+              <button type="button" className="task-step-title all-done" onClick={() => setOpen(true)}>
+                All steps done. Tick the task when you’re ready.
+              </button>
+            )}
+          </div>
+        )}
       </div>
+      {open && <TaskDetail taskId={task.id} onClose={close} />}
     </div>
   )
 }

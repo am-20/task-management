@@ -3755,3 +3755,293 @@ a.crumb:hover {
   min-height: 44px;
   font-size: 15.5px;
 }
+
+/* ---------- Steps: on the task row ---------- */
+
+.task {
+  flex-wrap: wrap;
+}
+
+.task-step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1 1 calc(100% - 30px);
+  min-width: 0;
+  margin: -4px 0 8px 30px;
+  font-size: 13.5px;
+}
+
+.task-step .check {
+  width: 16px;
+  height: 16px;
+}
+
+.task-step-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  text-align: left;
+}
+
+.task-step-title:hover {
+  color: var(--accent-text);
+}
+
+.task-step-title.all-done {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.task-step-count {
+  flex: none;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.steps-chip span {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Steps: the task's card ---------- */
+
+.popover.task-detail {
+  width: min(calc(100vw - 32px), 540px) !important;
+  max-height: min(86dvh, 760px);
+  padding: 16px 18px 12px;
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.detail-head .check {
+  width: 22px;
+  height: 22px;
+  margin-top: 7px;
+}
+
+.detail-title {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  resize: none;
+  overflow: hidden;
+  field-sizing: content;
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 480;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.detail-title:focus {
+  outline: none;
+}
+
+.detail-close {
+  margin: 2px -6px 0 0;
+}
+
+.detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-left: 34px;
+}
+
+.detail-chips .chip {
+  height: 30px;
+  padding: 0 10px;
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.detail-chips .chip.unset {
+  opacity: 1;
+  color: var(--text-3);
+}
+
+.detail-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 34px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 6px;
+  background: rgba(244, 226, 204, 0.1);
+  overflow: hidden;
+}
+
+.progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: var(--accent-hover);
+  transition: width 0.3s var(--ease);
+}
+
+.detail-label {
+  margin: 6px 0 -4px;
+  color: var(--text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.steps {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.step.next {
+  background: var(--accent-soft);
+}
+
+.step-title {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 15px;
+}
+
+.step-title:focus {
+  outline: none;
+}
+
+.step.done .step-title {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+.step-next {
+  flex: none;
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.step-actions {
+  display: flex;
+  flex: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.step:hover .step-actions,
+.step:focus-within .step-actions {
+  opacity: 1;
+}
+
+.step-add {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 12px;
+  color: var(--accent-text);
+  cursor: text;
+}
+
+.step-add input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  border: 0;
+  background: none;
+  font-size: 15px;
+}
+
+.step-add input:focus {
+  outline: none;
+}
+
+.step-add input::placeholder {
+  color: var(--text-3);
+}
+
+.steps-done {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  font-size: 14px;
+}
+
+.steps-done .btn.small {
+  margin: 0;
+}
+
+.detail-note {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 76px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.16);
+  resize: none;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.detail-note:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}
+
+.detail .card-delete {
+  align-self: flex-start;
+  margin: 0 0 0 -4px;
+}
+
+@media (hover: none) {
+  /* No hover on phones: keep the step controls visible */
+  .step-actions {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 860px) {
+  /* The details under a task wrap rather than run past the screen edge */
+  .task .task-meta {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+}

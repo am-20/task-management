@@ -14,6 +14,8 @@ keeps working offline.
 
 - **Today** – what is due or overdue, today's habits, and a card per life area.
 - **Upcoming** – every open task grouped by when it is due, filterable by area.
+- **Steps and notes** – break any task into steps and add a short note; lists
+  show the next step and progress, and you can tick steps off right there.
 - **Repeating tasks** – daily, every N days, weekdays, chosen days of the week,
   every N weeks, monthly on a date / the last day / e.g. the second Tuesday or
   last Friday, yearly, or "N days/weeks/months after it's done"; can end on a

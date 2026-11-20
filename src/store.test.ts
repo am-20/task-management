@@ -95,3 +95,62 @@ describe('forward compatibility', () => {
     expect(s.habits[0].reminder).toBe('08:00')
   })
 })
+
+describe('steps', () => {
+  const add = () => {
+    state().addTask({ title: 'Driver’s license', due: '2026-11-20' })
+    return byTitle('Driver’s license')[0].id
+  }
+
+  it('adds steps in order, or right after another one', () => {
+    const id = add()
+    const a = state().addStep(id, 'Choose a school')
+    state().addStep(id, 'Theory exam')
+    state().addStep(id, 'Medical certificate', a)
+    expect(byTitle('Driver’s license')[0].steps!.map((s) => s.title)).toEqual(['Choose a school', 'Medical certificate', 'Theory exam'])
+  })
+
+  it('ticks, renames, moves and removes steps', () => {
+    const id = add()
+    const a = state().addStep(id, 'One')
+    const b = state().addStep(id, 'Two')
+    state().toggleStep(id, a)
+    state().updateStep(id, b, { title: 'Second' })
+    state().moveStep(id, b, -1)
+    let steps = byTitle('Driver’s license')[0].steps!
+    expect(steps.map((s) => `${s.title}:${s.done}`)).toEqual(['Second:false', 'One:true'])
+    state().deleteStep(id, a)
+    state().deleteStep(id, b)
+    steps = byTitle('Driver’s license')[0].steps as never
+    expect(steps).toBeUndefined()
+  })
+
+  it('finishing all steps does not finish the task by itself', () => {
+    const id = add()
+    const a = state().addStep(id, 'Only step')
+    state().toggleStep(id, a)
+    expect(byTitle('Driver’s license')[0].done).toBe(false)
+  })
+
+  it('a repeating task’s next round starts its steps from the top, and keeps the note', () => {
+    state().addTask({ title: 'Cat to the vet', due: '2026-11-18', repeat: { every: 6, unit: 'month', monthBy: 'day', monthDay: 18 } })
+    const id = byTitle('Cat to the vet')[0].id
+    const a = state().addStep(id, 'Call the clinic')
+    state().addStep(id, 'Appointment')
+    state().toggleStep(id, a)
+    state().updateTask(id, { note: 'Bring the vaccination book' })
+    state().toggleTask(id)
+    const next = byTitle('Cat to the vet').find((t) => !t.done)!
+    expect(next.steps!.map((s) => s.done)).toEqual([false, false])
+    expect(next.note).toBe('Bring the vaccination book')
+  })
+
+  it('steps and note survive sync cleaning', () => {
+    const id = add()
+    state().addStep(id, 'Theory exam')
+    state().updateTask(id, { note: 'School: AutoStart' })
+    const snapshot = JSON.parse(JSON.stringify({ areas: [], pages: [], tasks: state().tasks, habits: [] }))
+    state().importData(snapshot)
+    expect(byTitle('Driver’s license')[0]).toMatchObject({ note: 'School: AutoStart', steps: [{ title: 'Theory exam', done: false }] })
+  })
+})
