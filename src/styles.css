@@ -3036,7 +3036,7 @@ a.crumb:hover {
   background-color: rgba(139, 0, 0, 0.06);
 }
 
-.block {
+.wblock {
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -3054,36 +3054,36 @@ a.crumb:hover {
   transition: background 0.12s;
 }
 
-.block:hover {
+.wblock:hover {
   background: color-mix(in srgb, var(--area) 36%, var(--surface-2));
   z-index: 2;
 }
 
-.block.short {
+.wblock.short {
   flex-direction: row;
   align-items: center;
   padding-top: 0;
   padding-bottom: 0;
 }
 
-.block-top {
+.wblock-top {
   display: flex;
   align-items: flex-start;
   gap: 6px;
   min-width: 0;
 }
 
-.block.short .block-top {
+.wblock.short .wblock-top {
   align-items: center;
 }
 
-.block .check {
+.wblock .check {
   width: 15px;
   height: 15px;
   margin-top: 1px;
 }
 
-.block-title {
+.wblock-title {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -3092,22 +3092,22 @@ a.crumb:hover {
   font-weight: 550;
 }
 
-.block-time {
+.wblock-time {
   color: var(--text-2);
   font-size: 11.5px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.block.done {
+.wblock.done {
   opacity: 0.55;
 }
 
-.block.done .block-title {
+.wblock.done .wblock-title {
   text-decoration: line-through;
 }
 
-.block.ghost {
+.wblock.ghost {
   border-left-style: dashed;
   background: rgba(244, 226, 204, 0.04);
   box-shadow: none;
@@ -3115,7 +3115,7 @@ a.crumb:hover {
   cursor: default;
 }
 
-.block.preview {
+.wblock.preview {
   z-index: 5;
   opacity: 0.92;
   box-shadow:
@@ -3124,7 +3124,7 @@ a.crumb:hover {
   pointer-events: none;
 }
 
-.block-resize {
+.wblock-resize {
   position: absolute;
   left: 0;
   right: 0;
@@ -3133,7 +3133,7 @@ a.crumb:hover {
   cursor: ns-resize;
 }
 
-.block-resize::after {
+.wblock-resize::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -3147,7 +3147,7 @@ a.crumb:hover {
   transition: opacity 0.12s;
 }
 
-.block:hover .block-resize::after {
+.wblock:hover .wblock-resize::after {
   opacity: 1;
 }
 
@@ -3281,7 +3281,7 @@ a.crumb:hover {
 }
 
 .lane-item.source,
-.block.source {
+.wblock.source {
   opacity: 0.3;
 }
 
@@ -3372,7 +3372,7 @@ a.crumb:hover {
 }
 
 .week.compact .lane-title,
-.week.compact .block-title {
+.week.compact .wblock-title {
   white-space: normal;
   overflow-wrap: anywhere;
   display: -webkit-box;
@@ -3409,7 +3409,7 @@ a.crumb:hover {
   font-size: 9.5px;
 }
 
-.week.compact .block {
+.week.compact .wblock {
   padding: 2px 3px 2px 4px;
   border-left-width: 2px;
   border-radius: 4px;
@@ -3417,15 +3417,15 @@ a.crumb:hover {
   line-height: 1.2;
 }
 
-.week.compact .block.short {
+.week.compact .wblock.short {
   align-items: flex-start;
 }
 
-.week.compact .block-title {
+.week.compact .wblock-title {
   font-weight: 600;
 }
 
-.week.compact .block-resize {
+.week.compact .wblock-resize {
   height: 12px;
 }
 
@@ -3435,7 +3435,7 @@ a.crumb:hover {
 
 /* Pressing and holding shouldn't select text or open the phone's menu */
 .week.compact .lane-item,
-.week.compact .block {
+.week.compact .wblock {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
 }

@@ -451,30 +451,30 @@ function WeekGrid({ data, today, compact = false }: { data: WeekData; today: str
                   return (
                     <div
                       key={t.id + item.date}
-                      className={`block${t.done ? ' done' : ''}${item.ghost ? ' ghost' : ''}${tall ? '' : ' short'}${dragging && !item.ghost && t.id === dragging.id ? ' source' : ''}`}
+                      className={`wblock${t.done ? ' done' : ''}${item.ghost ? ' ghost' : ''}${tall ? '' : ' short'}${dragging && !item.ghost && t.id === dragging.id ? ' source' : ''}`}
                       style={blockStyle(t, t.time!, duration, layout.get(item))}
                       onPointerDown={(e) => begin(e, item, 'move')}
                       title={`${t.title} · ${formatRange(t.time!, duration)}`}
                     >
-                      <div className="block-top">
+                      <div className="wblock-top">
                         {!item.ghost && !compact && (
                           <Checkbox checked={t.done} onChange={() => toggleTask(t.id)} color={color(t.areaId)} label="Done" />
                         )}
-                        <span className="block-title">{t.title || 'Untitled'}</span>
+                        <span className="wblock-title">{t.title || 'Untitled'}</span>
                       </div>
-                      {tall && !compact && <span className="block-time">{formatRange(t.time!, duration)}</span>}
+                      {tall && !compact && <span className="wblock-time">{formatRange(t.time!, duration)}</span>}
                       {!item.ghost && !t.done && (
-                        <span className="block-resize" onPointerDown={(e) => begin(e, item, 'resize')} aria-hidden="true" />
+                        <span className="wblock-resize" onPointerDown={(e) => begin(e, item, 'resize')} aria-hidden="true" />
                       )}
                     </div>
                   )
                 })}
                 {dragged && dragging?.preview.time && (
-                  <div className="block preview" style={blockStyle(dragged, dragging.preview.time, dragging.preview.duration)}>
-                    <div className="block-top">
-                      <span className="block-title">{dragged.title}</span>
+                  <div className="wblock preview" style={blockStyle(dragged, dragging.preview.time, dragging.preview.duration)}>
+                    <div className="wblock-top">
+                      <span className="wblock-title">{dragged.title}</span>
                     </div>
-                    <span className="block-time">{formatRange(dragging.preview.time, dragging.preview.duration)}</span>
+                    <span className="wblock-time">{formatRange(dragging.preview.time, dragging.preview.duration)}</span>
                   </div>
                 )}
                 {day === today && nowMin >= range.start && nowMin <= range.end && (

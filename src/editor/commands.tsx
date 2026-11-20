@@ -54,7 +54,25 @@ export const SHORTCUTS: Record<string, BlockType> = {
   '[ ]': 'todo',
   '>': 'quote',
   '"': 'quote',
+  // What phone keyboards turn some of these into
+  '•': 'bullet',
+  '1)': 'number',
+  '“': 'quote',
+  '”': 'quote',
 }
+
+/**
+ * A shortcut typed at the start of a block followed by a space, however the space
+ * arrived (phone keyboards send it without a key press, often as a no-break space).
+ * Returns the block type, or null.
+ */
+export function shortcutBefore(textBeforeCaret: string): BlockType | null {
+  const m = /^(\S{1,3}|\[ \])[ \u00a0]$/.exec(textBeforeCaret)
+  return m ? (SHORTCUTS[m[1]] ?? null) : null
+}
+
+/** "---", or what phone keyboards make of it ("—-", "–-", "——"). */
+export const isDividerText = (text: string) => /^(---|[—–]-|——|-[—–])$/.test(text.trim())
 
 export const isList = (type: BlockType) => type === 'bullet' || type === 'number' || type === 'todo'
 
