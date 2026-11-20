@@ -15,14 +15,18 @@ interface PopoverProps {
   align?: 'start' | 'end'
   className?: string
   width?: number
+  /** Always open in the middle of the screen */
+  centered?: boolean
 }
 
-export function Popover({ anchor, onClose, children, align = 'start', className = '', width }: PopoverProps) {
+export function Popover({ anchor, onClose, children, align = 'start', className = '', width, centered = false }: PopoverProps) {
   const ref = useRef<HTMLDivElement>(null)
   const scrimRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
-  // On phones, pop-ups open in the middle of the screen with bigger targets.
-  const sheet = useIsPhone()
+  // On phones, pop-ups open in the middle of the screen with bigger targets;
+  // `centered` does that on every screen (for larger cards like a task's details).
+  const phone = useIsPhone()
+  const sheet = phone || centered
 
   useLayoutEffect(() => {
     const el = ref.current

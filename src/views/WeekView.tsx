@@ -5,6 +5,7 @@ import { Checkbox, Popover } from '../components/ui'
 import { addDays, fromKey, longDate, weekday } from '../lib/date'
 import { describeRepeat, upcomingDates } from '../lib/repeat'
 import { byDue } from '../lib/sort'
+import { stepInfo } from '../lib/steps'
 import { formatHour, formatRange, formatTime, fromMinutes, hourRange, toMinutes } from '../lib/time'
 import { showToast } from '../lib/toast'
 import { useIsPhone } from '../lib/useMedia'
@@ -407,6 +408,7 @@ function WeekGrid({ data, today, compact = false }: { data: WeekData; today: str
                   )}
                   {item.ghost && !compact && <RepeatIcon size={11} />}
                   <span className="lane-title">{item.task.title || 'Untitled'}</span>
+                  {!compact && !item.ghost && item.task.steps?.length ? <StepCount task={item.task} /> : null}
                 </div>
               ))}
               {!compact && (
@@ -461,6 +463,7 @@ function WeekGrid({ data, today, compact = false }: { data: WeekData; today: str
                           <Checkbox checked={t.done} onChange={() => toggleTask(t.id)} color={color(t.areaId)} label="Done" />
                         )}
                         <span className="wblock-title">{t.title || 'Untitled'}</span>
+                        {!compact && !item.ghost && t.steps?.length ? <StepCount task={t} /> : null}
                       </div>
                       {tall && !compact && <span className="wblock-time">{formatRange(t.time!, duration)}</span>}
                       {!item.ghost && !t.done && (
@@ -528,5 +531,15 @@ function WeekGrid({ data, today, compact = false }: { data: WeekData; today: str
         </Popover>
       )}
     </div>
+  )
+}
+
+/** "2/5" for a task with steps. */
+function StepCount({ task }: { task: Task }) {
+  const info = stepInfo(task)
+  return (
+    <span className="wsteps" title={`${info.done} of ${info.total} steps done`}>
+      {info.done}/{info.total}
+    </span>
   )
 }

@@ -64,6 +64,12 @@ export interface Repeat {
   occurrence?: number
 }
 
+export interface Step {
+  id: string
+  title: string
+  done: boolean
+}
+
 export interface Task {
   id: string
   title: string
@@ -82,6 +88,10 @@ export interface Task {
   seriesId?: string
   /** On a finished occurrence: the next occurrence it created, so un-ticking can undo it */
   spawnedId?: string
+  /** Smaller steps toward the task, in order. The first unticked one is "next". */
+  steps?: Step[]
+  /** A short plain-text note */
+  note?: string
 }
 
 export interface Habit {

@@ -5,7 +5,7 @@ import { uid } from './lib/id'
 import { cleanRepeat, firstOnOrAfter, nextDue } from './lib/repeat'
 import { sanitize } from './lib/sanitize'
 import { AREA_COLORS, createSeed } from './seed'
-import type { Area, Block, DataSnapshot, Habit, Page, Repeat, Task } from './types'
+import type { Area, Block, DataSnapshot, Habit, Page, Repeat, Step, Task } from './types'
 
 interface State extends DataSnapshot {
   /** Areas whose page list is open in the sidebar */
@@ -30,6 +30,15 @@ interface State extends DataSnapshot {
   setRepeat: (id: string, repeat?: Repeat) => void
   /** Move a repeating task to its next date without marking it done */
   skipOccurrence: (id: string) => void
+
+  /** Add a step to a task (after another step, or at the end); returns its id */
+  addStep: (taskId: string, title?: string, afterId?: string) => string
+  updateStep: (taskId: string, stepId: string, patch: Partial<Step>) => void
+  toggleStep: (taskId: string, stepId: string) => void
+  deleteStep: (taskId: string, stepId: string) => void
+  moveStep: (taskId: string, stepId: string, by: -1 | 1) => void
+  /** Put a step at a position in the list (drag to reorder) */
+  reorderStep: (taskId: string, stepId: string, toIndex: number) => void
   deleteTask: (id: string) => void
   /** Put a deleted task back where it was (for Undo) */
   restoreTask: (task: Task, index: number) => void
@@ -105,6 +114,12 @@ export function normalizeSnapshot(raw: unknown): DataSnapshot {
       repeat: cleanRepeat(t.repeat),
       seriesId: typeof t.seriesId === 'string' ? t.seriesId : undefined,
       spawnedId: typeof t.spawnedId === 'string' ? t.spawnedId : undefined,
+      steps: Array.isArray(t.steps)
+        ? t.steps
+            .filter((st) => st && typeof st.id === 'string')
+            .map((st) => ({ ...keep(st), id: st.id, title: str(st.title), done: !!st.done }))
+        : undefined,
+      note: typeof t.note === 'string' ? t.note : undefined,
       createdAt: Number(t.createdAt) || Date.now(),
     }))
   const habits = arr<Habit>(data.habits)
@@ -234,6 +249,9 @@ export const useStore = create<State>()(
                 due: next,
                 time: task.time,
                 duration: task.duration,
+                // Each time round, the steps start again from the top.
+                steps: task.steps?.map((st) => ({ ...st, id: uid(), done: false })),
+                note: task.note,
                 areaId: task.areaId,
                 createdAt: now,
                 repeat: { ...task.repeat, occurrence: (task.repeat.occurrence ?? 1) + 1 },
@@ -264,6 +282,63 @@ export const useStore = create<State>()(
               due: firstOnOrAfter(repeat, t.due ?? todayKey()),
               seriesId: t.seriesId ?? t.id,
             }
+          }),
+        })),
+      addStep: (taskId, title = '', afterId) => {
+        const id = uid()
+        set((s) => ({
+          tasks: s.tasks.map((t) => {
+            if (t.id !== taskId) return t
+            const steps = [...(t.steps ?? [])]
+            const at = afterId ? steps.findIndex((st) => st.id === afterId) + 1 : steps.length
+            steps.splice(at <= 0 ? steps.length : at, 0, { id, title, done: false })
+            return { ...t, steps }
+          }),
+        }))
+        return id
+      },
+      updateStep: (taskId, stepId, patch) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) =>
+            t.id === taskId ? { ...t, steps: t.steps?.map((st) => (st.id === stepId ? { ...st, ...patch } : st)) } : t,
+          ),
+        })),
+      toggleStep: (taskId, stepId) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) =>
+            t.id === taskId ? { ...t, steps: t.steps?.map((st) => (st.id === stepId ? { ...st, done: !st.done } : st)) } : t,
+          ),
+        })),
+      deleteStep: (taskId, stepId) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) => {
+            if (t.id !== taskId) return t
+            const steps = t.steps?.filter((st) => st.id !== stepId)
+            return { ...t, steps: steps && steps.length ? steps : undefined }
+          }),
+        })),
+      moveStep: (taskId, stepId, by) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) => {
+            if (t.id !== taskId || !t.steps) return t
+            const steps = [...t.steps]
+            const i = steps.findIndex((st) => st.id === stepId)
+            const j = i + by
+            if (i < 0 || j < 0 || j >= steps.length) return t
+            ;[steps[i], steps[j]] = [steps[j], steps[i]]
+            return { ...t, steps }
+          }),
+        })),
+      reorderStep: (taskId, stepId, toIndex) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) => {
+            if (t.id !== taskId || !t.steps) return t
+            const from = t.steps.findIndex((st) => st.id === stepId)
+            if (from < 0) return t
+            const steps = [...t.steps]
+            const [moved] = steps.splice(from, 1)
+            steps.splice(Math.max(0, Math.min(toIndex, steps.length)), 0, moved)
+            return { ...t, steps }
           }),
         })),
       skipOccurrence: (id) =>
