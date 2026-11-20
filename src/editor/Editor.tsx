@@ -14,7 +14,7 @@ import { MenuDivider, MenuItem, MenuLabel, Popover } from '../components/ui'
 import { htmlToText } from '../lib/sanitize'
 import type { Block, BlockType } from '../types'
 import { BlockView, type EditorApi } from './BlockView'
-import { COMMANDS, SHORTCUTS, filterCommands, isList, newBlock, parseLine, type Command } from './commands'
+import { COMMANDS, SHORTCUTS, filterCommands, isDividerText, isList, newBlock, parseLine, shortcutBefore, type Command } from './commands'
 import {
   caretLine,
   placeCaret,
@@ -176,10 +176,26 @@ export function Editor({ blocks, onChange, onExitTop }: Props) {
       const block = blocks.find((b) => b.id === id)
       if (!block) return
       tidy(el)
-      if (block.type === 'text' && el.textContent === '---') {
+      if (block.type === 'text' && isDividerText(el.textContent ?? '')) {
         setSlash(null)
         turnInto(id, 'divider', '')
         return
+      }
+      // Markdown-style shortcuts ("- ", "# ", "[] " …). Desktop catches them on the space
+      // key; phone keyboards insert the space without a key press, so check here too.
+      if (block.type === 'text') {
+        const range = selectionRange(el)
+        const type = range?.collapsed ? shortcutBefore(textBeforeCaret(el)) : null
+        if (range && type) {
+          const prefix = document.createRange()
+          prefix.selectNodeContents(el)
+          prefix.setEnd(range.startContainer, range.startOffset)
+          prefix.deleteContents()
+          tidy(el)
+          setSlash(null)
+          update(id, { type, html: el.innerHTML })
+          return
+        }
       }
       update(id, { html: el.innerHTML })
       updateSlash(id, el)
