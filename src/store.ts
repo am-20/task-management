@@ -37,6 +37,8 @@ interface State extends DataSnapshot {
   toggleStep: (taskId: string, stepId: string) => void
   deleteStep: (taskId: string, stepId: string) => void
   moveStep: (taskId: string, stepId: string, by: -1 | 1) => void
+  /** Put a step at a position in the list (drag to reorder) */
+  reorderStep: (taskId: string, stepId: string, toIndex: number) => void
   deleteTask: (id: string) => void
   /** Put a deleted task back where it was (for Undo) */
   restoreTask: (task: Task, index: number) => void
@@ -324,6 +326,18 @@ export const useStore = create<State>()(
             const j = i + by
             if (i < 0 || j < 0 || j >= steps.length) return t
             ;[steps[i], steps[j]] = [steps[j], steps[i]]
+            return { ...t, steps }
+          }),
+        })),
+      reorderStep: (taskId, stepId, toIndex) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) => {
+            if (t.id !== taskId || !t.steps) return t
+            const from = t.steps.findIndex((st) => st.id === stepId)
+            if (from < 0) return t
+            const steps = [...t.steps]
+            const [moved] = steps.splice(from, 1)
+            steps.splice(Math.max(0, Math.min(toIndex, steps.length)), 0, moved)
             return { ...t, steps }
           }),
         })),

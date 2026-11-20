@@ -125,6 +125,17 @@ describe('steps', () => {
     expect(steps).toBeUndefined()
   })
 
+  it('drags a step to any position', () => {
+    const id = add()
+    const a = state().addStep(id, 'A')
+    state().addStep(id, 'B')
+    state().addStep(id, 'C')
+    state().reorderStep(id, a, 2)
+    expect(byTitle('Driver’s license')[0].steps!.map((s) => s.title).join('')).toBe('BCA')
+    state().reorderStep(id, a, 0)
+    expect(byTitle('Driver’s license')[0].steps!.map((s) => s.title).join('')).toBe('ABC')
+  })
+
   it('finishing all steps does not finish the task by itself', () => {
     const id = add()
     const a = state().addStep(id, 'Only step')

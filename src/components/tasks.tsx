@@ -4,6 +4,7 @@ import { addDays, nextMonday, nextSaturday, relativeLabel, todayKey, weekday } f
 import { DURATIONS, formatDuration, formatTime } from '../lib/time'
 import { stepInfo } from '../lib/steps'
 import { showToast } from '../lib/toast'
+import { useIsPhone } from '../lib/useMedia'
 import { useStore } from '../store'
 import type { Area, Repeat, Task } from '../types'
 import { usePopover } from '../lib/usePopover'
@@ -188,6 +189,7 @@ export function TaskRow({ task, showArea = true }: { task: Task; showArea?: bool
   const skipOccurrence = useStore((s) => s.skipOccurrence)
   const toggleStep = useStore((s) => s.toggleStep)
   const steps = stepInfo(task)
+  const phone = useIsPhone()
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])
 
@@ -266,19 +268,26 @@ export function TaskRow({ task, showArea = true }: { task: Task; showArea?: bool
           color={area?.color}
           label={task.done ? 'Mark as not done' : 'Mark as done'}
         />
-        <input
-          className="task-title"
-          value={task.title}
-          aria-label="Task"
-          placeholder="Untitled task"
-          onChange={(e) => updateTask(task.id, { title: e.target.value })}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur()
-          }}
-          onBlur={(e) => {
-            if (!e.target.value.trim()) deleteTask(task.id)
-          }}
-        />
+        {phone ? (
+          // On a phone, tapping the name opens the task's card (rename it there).
+          <button type="button" className="task-title task-open" onClick={() => setOpen(true)}>
+            {task.title || 'Untitled task'}
+          </button>
+        ) : (
+          <input
+            className="task-title"
+            value={task.title}
+            aria-label="Task"
+            placeholder="Untitled task"
+            onChange={(e) => updateTask(task.id, { title: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur()
+            }}
+            onBlur={(e) => {
+              if (!e.target.value.trim()) deleteTask(task.id)
+            }}
+          />
+        )}
         <div className="task-meta">
           {showArea && <AreaChip area={area} onChange={(areaId) => updateTask(task.id, { areaId })} />}
           {!task.done && (
@@ -294,6 +303,7 @@ export function TaskRow({ task, showArea = true }: { task: Task; showArea?: bool
             done={task.done}
             onChange={(when) => updateTask(task.id, { due: when.due, time: when.time, duration: when.duration })}
           />
+          {(!phone || steps.total > 0 || task.note) && (
           <button
             type="button"
             className={`chip steps-chip${steps.total ? '' : ' unset'}`}
@@ -309,6 +319,7 @@ export function TaskRow({ task, showArea = true }: { task: Task; showArea?: bool
             )}
             {!steps.total && task.note && <span>Note</span>}
           </button>
+          )}
           <button type="button" className="icon-btn subtle task-delete" aria-label="Delete task" title="Delete" onClick={remove}>
             <Trash2 size={14} />
           </button>

@@ -1,5 +1,5 @@
-import { ArrowDown, ArrowUp, Check, Plus, Trash2, X } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { Check, GripVertical, Plus, Trash2, X } from 'lucide-react'
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { stepInfo } from '../lib/steps'
 import { showToast } from '../lib/toast'
 import { useStore } from '../store'
@@ -33,7 +33,35 @@ function TaskDetailBody({ task, onClose }: { task: Task; onClose: () => void }) 
   const deleteTask = useStore((s) => s.deleteTask)
   const restoreTask = useStore((s) => s.restoreTask)
   const addStep = useStore((s) => s.addStep)
+  const reorderStep = useStore((s) => s.reorderStep)
   const [focusStep, setFocusStep] = useState<string | null>(null)
+  const [dragId, setDragId] = useState<string | null>(null)
+  const stepsRef = useRef<HTMLDivElement>(null)
+
+  /** Drag a step by its handle; the others make room as it passes their middle. */
+  const startDrag = (e: ReactPointerEvent<HTMLElement>, stepId: string) => {
+    e.preventDefault()
+    setDragId(stepId)
+    const move = (ev: PointerEvent) => {
+      const rows = [...(stepsRef.current?.querySelectorAll<HTMLElement>('[data-step-id]') ?? [])]
+      const others = rows.filter((r) => r.dataset.stepId !== stepId)
+      const to = others.filter((r) => {
+        const b = r.getBoundingClientRect()
+        return b.top + b.height / 2 < ev.clientY
+      }).length
+      const current = useStore.getState().tasks.find((t) => t.id === task.id)?.steps ?? []
+      if (current.findIndex((st) => st.id === stepId) !== to) reorderStep(task.id, stepId, to)
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+      setDragId(null)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+  }
   const [draft, setDraft] = useState('')
   const noteRef = useRef<HTMLTextAreaElement>(null)
   const info = stepInfo(task)
@@ -114,15 +142,15 @@ function TaskDetailBody({ task, onClose }: { task: Task; onClose: () => void }) 
       )}
 
       <div className="detail-label">Steps</div>
-      <div className="steps">
-        {steps.map((step, i) => (
+      <div className={`steps${dragId ? ' sorting' : ''}`} ref={stepsRef}>
+        {steps.map((step) => (
           <StepRow
             key={step.id}
             task={task}
             step={step}
             isNext={info.next?.id === step.id}
-            first={i === 0}
-            last={i === steps.length - 1}
+            dragging={dragId === step.id}
+            onGripDown={(e) => startDrag(e, step.id)}
             autoFocus={focusStep === step.id}
             color={area?.color}
             onFocusStep={setFocusStep}
@@ -176,8 +204,8 @@ function StepRow({
   task,
   step,
   isNext,
-  first,
-  last,
+  dragging,
+  onGripDown,
   autoFocus,
   color,
   onFocusStep,
@@ -185,8 +213,8 @@ function StepRow({
   task: Task
   step: Step
   isNext: boolean
-  first: boolean
-  last: boolean
+  dragging: boolean
+  onGripDown: (e: ReactPointerEvent<HTMLElement>) => void
   autoFocus: boolean
   color?: string
   onFocusStep: (id: string | null) => void
@@ -219,7 +247,10 @@ function StepRow({
   }
 
   return (
-    <div className={`step${step.done ? ' done' : ''}${isNext ? ' next' : ''}`}>
+    <div className={`step${step.done ? ' done' : ''}${isNext ? ' next' : ''}${dragging ? ' dragging' : ''}`} data-step-id={step.id}>
+      <span className="step-grip" onPointerDown={onGripDown} title="Drag to reorder" aria-hidden="true">
+        <GripVertical size={16} />
+      </span>
       <Checkbox round={false} checked={step.done} onChange={() => toggleStep(task.id, step.id)} color={color} label="Step done" />
       <input
         ref={ref}
@@ -235,12 +266,6 @@ function StepRow({
       />
       {isNext && <span className="step-next">Next</span>}
       <div className="step-actions">
-        <button type="button" className="icon-btn subtle" aria-label="Move up" disabled={first} onClick={() => moveStep(task.id, step.id, -1)}>
-          <ArrowUp size={14} />
-        </button>
-        <button type="button" className="icon-btn subtle" aria-label="Move down" disabled={last} onClick={() => moveStep(task.id, step.id, 1)}>
-          <ArrowDown size={14} />
-        </button>
         <button type="button" className="icon-btn subtle" aria-label="Remove step" onClick={() => deleteStep(task.id, step.id)}>
           <X size={14} />
         </button>

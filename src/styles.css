@@ -4045,3 +4045,92 @@ a.crumb:hover {
     row-gap: 2px;
   }
 }
+
+/* iOS zooms in on any text field under 16px and doesn't zoom back out. */
+@media (pointer: coarse) {
+  .step .step-title,
+  .step-add input,
+  .detail .detail-note,
+  .habit-row .habit-name {
+    font-size: 16px;
+  }
+}
+
+/* Drag steps to reorder */
+.step {
+  padding-left: 4px;
+}
+
+.step-grip {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 40px;
+  flex: none;
+  margin-right: -4px;
+  color: var(--text-3);
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.step-grip:hover {
+  color: var(--text);
+}
+
+.steps.sorting,
+.steps.sorting * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+.step.dragging {
+  position: relative;
+  z-index: 1;
+  background: var(--surface-3);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+@media (pointer: coarse) {
+  .step-grip {
+    width: 34px;
+    height: 46px;
+  }
+}
+
+/* On phones the task name is a button that opens its card */
+.task .task-open {
+  flex: 1;
+  min-width: 0;
+  height: auto;
+  min-height: 38px;
+  padding: 7px 0;
+  text-align: left;
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.task.done .task-open {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+/* Step progress on calendar blocks */
+.wsteps {
+  flex: none;
+  margin-left: auto;
+  padding-left: 4px;
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.week.compact .wsteps {
+  display: block;
+  margin: 1px 0 0;
+  padding: 0;
+  font-size: 9.5px;
+}
