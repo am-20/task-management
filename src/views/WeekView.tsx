@@ -408,7 +408,7 @@ function WeekGrid({ data, today, compact = false }: { data: WeekData; today: str
                   )}
                   {item.ghost && !compact && <RepeatIcon size={11} />}
                   <span className="lane-title">{item.task.title || 'Untitled'}</span>
-                  {!item.ghost && item.task.steps?.length ? <StepCount task={item.task} /> : null}
+                  {!compact && !item.ghost && item.task.steps?.length ? <StepCount task={item.task} /> : null}
                 </div>
               ))}
               {!compact && (
@@ -463,7 +463,7 @@ function WeekGrid({ data, today, compact = false }: { data: WeekData; today: str
                           <Checkbox checked={t.done} onChange={() => toggleTask(t.id)} color={color(t.areaId)} label="Done" />
                         )}
                         <span className="wblock-title">{t.title || 'Untitled'}</span>
-                        {!item.ghost && t.steps?.length ? <StepCount task={t} /> : null}
+                        {!compact && !item.ghost && t.steps?.length ? <StepCount task={t} /> : null}
                       </div>
                       {tall && !compact && <span className="wblock-time">{formatRange(t.time!, duration)}</span>}
                       {!item.ghost && !t.done && (

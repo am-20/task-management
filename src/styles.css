@@ -4128,9 +4128,3 @@ a.crumb:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.week.compact .wsteps {
-  display: block;
-  margin: 1px 0 0;
-  padding: 0;
-  font-size: 9.5px;
-}
