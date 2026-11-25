@@ -23,7 +23,18 @@ export function AuthGate({ children }: { children: ReactNode }) {
       })
     }
 
+    // Supabase normally answers in well under a second. If it doesn't (it's down, slow,
+    // or the free project is paused) and the stored sign-in has expired, it can keep
+    // retrying for a long time before saying anything. Don't wait for it: open with the
+    // copy saved on this device and keep syncing in the background.
+    const patience = window.setTimeout(() => {
+      const userId = storedUserId()
+      setPhase((p) => (p !== 'loading' ? p : userId ? 'ready' : 'signedOut'))
+      if (userId) void startSync(userId)
+    }, 3000)
+
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      window.clearTimeout(patience)
       // Defer work out of the auth callback, as Supabase recommends.
       window.setTimeout(() => {
         if (event === 'PASSWORD_RECOVERY') {
@@ -38,13 +49,31 @@ export function AuthGate({ children }: { children: ReactNode }) {
         if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') begin(session)
       }, 0)
     })
-    return () => data.subscription.unsubscribe()
+    return () => {
+      window.clearTimeout(patience)
+      data.subscription.unsubscribe()
+    }
   }, [])
 
   if (phase === 'ready') return <>{children}</>
   if (phase === 'signedOut') return <SignIn />
   if (phase === 'recovery') return <NewPassword onDone={() => setPhase('ready')} />
   return <Splash />
+}
+
+/** The account signed in on this device, read straight from Supabase's saved session. */
+function storedUserId(): string | null {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (!/^sb-.+-auth-token$/.test(key)) continue
+      const saved = JSON.parse(localStorage.getItem(key) ?? 'null')
+      const id = saved?.user?.id ?? saved?.currentSession?.user?.id
+      if (typeof id === 'string') return id
+    }
+  } catch {
+    // Storage unavailable: fall through to the sign-in screen.
+  }
+  return null
 }
 
 function Brand() {
